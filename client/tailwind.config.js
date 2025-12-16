@@ -1,19 +1,43 @@
 /** @type {import('tailwindcss').Config} */
 export default {
   content: ["./index.html", "./src/**/*.{js,ts,jsx,tsx}"],
+  darkMode: "class", // Enable class-based dark mode via data-theme attribute
   theme: {
     extend: {
       colors: {
-        primary: {
-          DEFAULT: "#3b82f6",
-          dark: "#1e40af",
-          light: "#60a5fa",
-        },
+        // High-Trust Fintech Palette
         slate: {
-          DEFAULT: "#475569",
-          dark: "#1e293b",
-          light: "#64748b",
+          50: "#f8fafc",
+          100: "#f1f5f9",
+          200: "#e2e8f0",
+          300: "#cbd5e1",
+          400: "#94a3b8",
+          500: "#64748b",
+          600: "#475569",
+          700: "#334155",
+          800: "#1e293b",
+          900: "#0f172a",
         },
+        blue: {
+          400: "#60a5fa",
+          500: "#3b82f6",
+          600: "#2563eb",
+          700: "#1d4ed8",
+        },
+        emerald: {
+          500: "#10b981",
+          600: "#059669",
+        },
+        amber: {
+          500: "#f59e0b",
+          600: "#d97706",
+        },
+      },
+      letterSpacing: {
+        tight: "-0.02em",
+      },
+      borderRadius: {
+        official: "6px", // Sharp corners for "official" look
       },
     },
   },

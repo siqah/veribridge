@@ -1,8 +1,10 @@
+// Load environment variables FIRST (before any other imports)
+import "./env.js";
+
 import express from "express";
 import cors from "cors";
 import helmet from "helmet";
 import morgan from "morgan";
-import dotenv from "dotenv";
 
 // Routes
 import verificationRoutes from "./routes/verification.js";
@@ -10,12 +12,11 @@ import paymentsRoutes from "./routes/payments.js";
 import servicesRoutes from "./routes/services.js";
 // Freelancer OS Routes
 import companyOrdersRoutes from "./routes/companyOrders.js";
+import formationRoutes from "./routes/formation.js"; // New formation engine
 import invoicesRoutes from "./routes/invoices.js";
 import mailboxRoutes from "./routes/mailbox.js";
 import apiKeysRoutes from "./routes/apiKeys.js";
 import addressApiRoutes from "./routes/addressApi.js";
-
-dotenv.config();
 
 const app = express();
 const PORT = process.env.PORT || 3001;
@@ -51,7 +52,8 @@ app.use("/api/payments", paymentsRoutes);
 app.use("/api/services", servicesRoutes);
 
 // Freelancer OS API Routes
-app.use("/api/company-orders", companyOrdersRoutes);
+app.use("/api/company-orders", companyOrdersRoutes); // Legacy
+app.use("/api/formation", formationRoutes); // New formation engine
 app.use("/api/invoices", invoicesRoutes);
 app.use("/api/mailbox", mailboxRoutes);
 app.use("/api/keys", apiKeysRoutes);
