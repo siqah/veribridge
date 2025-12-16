@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Shield, Lock, MapPin, CheckCircle, Printer, Search, Smartphone, FileText, Package, Home, ChevronRight, Menu, X } from 'lucide-react';
+import { Shield, Lock, MapPin, CheckCircle, Printer, Search, Smartphone, FileText, Package, Home, ChevronRight, Menu, X, Briefcase } from 'lucide-react';
 import HomePage from './components/HomePage';
 import AddressBuilder from './components/AddressBuilder';
 import BankGuides from './components/BankGuides';
@@ -7,11 +7,19 @@ import BankCardGenerator from './components/BankCardGenerator';
 import AffidavitGenerator from './components/AffidavitGenerator';
 import VerificationPackageGenerator from './components/VerificationPackageGenerator';
 import OCRValidator from './components/OCRValidator';
+// Dashboard components
+import DashboardLayout from './components/dashboard/DashboardLayout';
+import CompanyFormation from './components/dashboard/CompanyFormation';
+import Invoicing from './components/dashboard/Invoicing';
+import Mailbox from './components/dashboard/Mailbox';
+import ApiKeys from './components/dashboard/ApiKeys';
 import { useAddressStore } from './store/addressStore';
 import './App.css';
 
 function App() {
+  const [mode, setMode] = useState('tools'); // 'tools' or 'dashboard'
   const [currentView, setCurrentView] = useState('home'); // 'home' or step number
+  const [dashboardPage, setDashboardPage] = useState('company-formation'); // dashboard page
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const { formattedAddress, validation } = useAddressStore();
   
@@ -118,40 +126,62 @@ function App() {
                 </div>
               </div>
               
-              <div className="flex items-center gap-2 px-3 py-1.5 rounded-full text-xs" style={{ background: 'var(--bg-card)', border: '1px solid var(--border-color)' }}>
-                <Lock className="w-3 h-3 text-green-400" />
-                <span className="text-gray-400">100% Private</span>
+              <div className="flex items-center gap-2">
+                <button
+                  onClick={() => setMode(mode === 'tools' ? 'dashboard' : 'tools')}
+                  className="px-3 py-1.5 rounded-lg text-sm font-medium transition-all hover:bg-white/10 flex items-center gap-2"
+                  style={{ color: mode === 'dashboard' ? '#3b82f6' : '#9ca3af' }}
+                >
+                  <Briefcase className="w-4 h-4" />
+                  {mode === 'dashboard' ? 'View Tools' : 'Business Dashboard'}
+                </button>
+                
+                <div className="flex items-center gap-2 px-3 py-1.5 rounded-full text-xs" style={{ background: 'var(--bg-card)', border: '1px solid var(--border-color)' }}>
+                  <Lock className="w-3 h-3 text-green-400" />
+                  <span className="text-gray-400">100% Private</span>
+                </div>
               </div>
             </header>
             
             {/* Content Area */}
-            {currentView === 'home' ? (
-              <HomePage onGetStarted={() => setCurrentView(1)} />
+            {mode === 'dashboard' ? (
+              /* Dashboard Mode */
+              <DashboardLayout currentPage={dashboardPage} onNavigate={setDashboardPage}>
+                {dashboardPage === 'company-formation' && <CompanyFormation />}
+                {dashboardPage === 'invoicing' && <Invoicing />}
+                {dashboardPage === 'mailbox' && <Mailbox />}
+                {dashboardPage === 'api' && <ApiKeys />}
+              </DashboardLayout>
             ) : (
-              <div className="card">
-                {/* Step Header */}
-                <div className="mb-6 pb-6 border-b" style={{ borderColor: 'var(--border-color)' }}>
-                  <div className="flex items-center gap-2 text-sm text-gray-500 mb-2">
-                    <button onClick={() => setCurrentView('home')} className="hover:text-white transition-colors">
-                      Home
-                    </button>
-                    <ChevronRight className="w-4 h-4" />
-                    <span className="text-blue-400">{currentNavItem?.title}</span>
+              /* Tools Mode */
+              currentView === 'home' ? (
+                <HomePage onGetStarted={() => setCurrentView(1)} />
+              ) : (
+                <div className="card">
+                  {/* Step Header */}
+                  <div className="mb-6 pb-6 border-b" style={{ borderColor: 'var(--border-color)' }}>
+                    <div className="flex items-center gap-2 text-sm text-gray-500 mb-2">
+                      <button onClick={() => setCurrentView('home')} className="hover:text-white transition-colors">
+                        Home
+                      </button>
+                      <ChevronRight className="w-4 h-4" />
+                      <span className="text-blue-400">{currentNavItem?.title}</span>
+                    </div>
+                    <h2 className="text-2xl font-bold text-white">{currentNavItem?.title}</h2>
+                    <p className="text-sm text-gray-400 mt-1">{currentNavItem?.description}</p>
                   </div>
-                  <h2 className="text-2xl font-bold text-white">{currentNavItem?.title}</h2>
-                  <p className="text-sm text-gray-400 mt-1">{currentNavItem?.description}</p>
+                  
+                  {/* Step Content */}
+                  <div className="fade-in">
+                    {currentView === 1 && <AddressBuilder />}
+                    {currentView === 2 && <VerificationPackageGenerator />}
+                    {currentView === 3 && <BankGuides />}
+                    {currentView === 4 && <BankCardGenerator />}
+                    {currentView === 5 && <AffidavitGenerator />}
+                    {currentView === 6 && <OCRValidator />}
+                  </div>
                 </div>
-                
-                {/* Step Content */}
-                <div className="fade-in">
-                  {currentView === 1 && <AddressBuilder />}
-                  {currentView === 2 && <VerificationPackageGenerator />}
-                  {currentView === 3 && <BankGuides />}
-                  {currentView === 4 && <BankCardGenerator />}
-                  {currentView === 5 && <AffidavitGenerator />}
-                  {currentView === 6 && <OCRValidator />}
-                </div>
-              </div>
+              )
             )}
             
             {/* Footer */}
@@ -161,7 +191,8 @@ function App() {
           </div>
         </main>
         
-        {/* Sidebar - Right Side */}
+        {/* Sidebar - Right Side - Only show in tools mode */}
+        {mode === 'tools' && (
         <aside className={`
           fixed lg:relative inset-y-0 right-0 z-50
           w-72 lg:w-64 
@@ -237,6 +268,7 @@ function App() {
             </div>
           </div>
         </aside>
+        )}
       </div>
       
       {/* Mobile Overlay */}

@@ -20,7 +20,8 @@
         "bcryptjs": "^2.4.3",
         "jsonwebtoken": "^9.0.2",
         "axios": "^1.6.2",
-        "qrcode": "^1.5.3"
+        "qrcode": "^1.5.3",
+        "puppeteer": "^21.6.0"
     },
     "devDependencies": {
         "nodemon": "^3.0.2"

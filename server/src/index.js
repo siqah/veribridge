@@ -8,6 +8,12 @@ import dotenv from "dotenv";
 import verificationRoutes from "./routes/verification.js";
 import paymentsRoutes from "./routes/payments.js";
 import servicesRoutes from "./routes/services.js";
+// Freelancer OS Routes
+import companyOrdersRoutes from "./routes/companyOrders.js";
+import invoicesRoutes from "./routes/invoices.js";
+import mailboxRoutes from "./routes/mailbox.js";
+import apiKeysRoutes from "./routes/apiKeys.js";
+import addressApiRoutes from "./routes/addressApi.js";
 
 dotenv.config();
 
@@ -26,6 +32,9 @@ app.use(morgan("dev"));
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
+// Serve static files (PDFs, images, etc.)
+app.use(express.static("public"));
+
 // Health check
 app.get("/health", (req, res) => {
   res.json({
@@ -40,6 +49,13 @@ app.get("/health", (req, res) => {
 app.use("/api/verify", verificationRoutes);
 app.use("/api/payments", paymentsRoutes);
 app.use("/api/services", servicesRoutes);
+
+// Freelancer OS API Routes
+app.use("/api/company-orders", companyOrdersRoutes);
+app.use("/api/invoices", invoicesRoutes);
+app.use("/api/mailbox", mailboxRoutes);
+app.use("/api/keys", apiKeysRoutes);
+app.use("/api/v1", addressApiRoutes); // B2B API
 
 // Public verification page (for QR codes)
 app.get("/verify/:id", async (req, res) => {
