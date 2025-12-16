@@ -1,7 +1,8 @@
 import { useEffect, useState, useCallback, useRef } from 'react';
-import { MapPin, AlertCircle, CheckCircle2, Search, Copy, Share2, Check } from 'lucide-react';
+import { MapPin, AlertCircle, CheckCircle2, Search, Copy, Share2, Check, Globe } from 'lucide-react';
 import { useAddressStore } from '../store/addressStore';
 import { formatAddress, validateAddress } from '../utils/addressLogic';
+import { getCountriesSorted, getCountryByCode, getAllRegions } from '../data/countries';
 
 // OpenStreetMap Nominatim API endpoint
 const NOMINATIM_API = 'https://nominatim.openstreetmap.org/search';
@@ -14,24 +15,41 @@ export default function AddressBuilder() {
   const searchTimeoutRef = useRef(null);
   const resultsRef = useRef(null);
   
+  const countries = getCountriesSorted();
+  
   const {
+    country,
+    countryName,
     building,
     street,
     area,
     city,
+    state,
     postalCode,
     formattedAddress,
     validation,
+    setCountry,
     setBuilding,
     setStreet,
     setArea,
     setCity,
+    setState,
     setPostalCode,
     setFormattedAddress,
     setValidation,
+    updateAddressComponents,
   } = useAddressStore();
   
-  // Search for places using OpenStreetMap Nominatim
+  // Handle country change
+  const handleCountryChange = (e) => {
+    const code = e.target.value;
+    const countryData = getCountryByCode(code);
+    if (countryData) {
+      setCountry(code, countryData.name);
+    }
+  };
+  
+  // Search for places using OpenStreetMap Nominatim (worldwide)
   const searchPlaces = useCallback(async (query) => {
     if (!query || query.length < 3) {
       setSearchResults([]);
@@ -41,14 +59,20 @@ export default function AddressBuilder() {
     setIsSearching(true);
     
     try {
+      const params = {
+        q: query,
+        format: 'json',
+        addressdetails: '1',
+        limit: '5',
+      };
+      
+      // Add country filter if selected
+      if (country) {
+        params.countrycodes = country.toLowerCase();
+      }
+      
       const response = await fetch(
-        `${NOMINATIM_API}?` + new URLSearchParams({
-          q: query,
-          countrycodes: 'ke',
-          format: 'json',
-          addressdetails: '1',
-          limit: '5',
-        }),
+        `${NOMINATIM_API}?` + new URLSearchParams(params),
         {
           headers: {
             'User-Agent': 'VeriBridge/1.0',
@@ -67,7 +91,7 @@ export default function AddressBuilder() {
     } finally {
       setIsSearching(false);
     }
-  }, []);
+  }, [country]);
   
   // Debounced search
   useEffect(() => {
@@ -102,11 +126,14 @@ export default function AddressBuilder() {
   const handleSelectPlace = (place) => {
     const address = place.address || {};
     
-    setBuilding(address.building || address.house || address.amenity || '');
-    setStreet(address.road || address.street || '');
-    setArea(address.suburb || address.neighbourhood || address.city_district || '');
-    setCity(address.city || address.town || address.village || 'Nairobi');
-    setPostalCode(address.postcode || '');
+    updateAddressComponents({
+      building: address.building || address.house || address.amenity || '',
+      street: address.road || address.street || '',
+      area: address.suburb || address.neighbourhood || address.city_district || '',
+      city: address.city || address.town || address.village || '',
+      state: address.state || address.county || address.region || '',
+      postalCode: address.postcode || '',
+    });
     
     setSearchQuery('');
     setSearchResults([]);
@@ -115,16 +142,38 @@ export default function AddressBuilder() {
   
   // Update formatted address whenever components change
   useEffect(() => {
-    const addressComponents = { building, street, area, city, postalCode };
+    const addressComponents = { building, street, area, city, state, postalCode, countryName };
     const formatted = formatAddress(addressComponents);
     setFormattedAddress(formatted);
     
     const validationResult = validateAddress(formatted);
     setValidation(validationResult);
-  }, [building, street, area, city, postalCode, setFormattedAddress, setValidation]);
+  }, [building, street, area, city, state, postalCode, countryName, setFormattedAddress, setValidation]);
   
   return (
     <div className="space-y-6">
+      {/* Country Selector */}
+      <div>
+        <label className="label flex items-center gap-2">
+          <Globe className="w-4 h-4 text-blue-400" />
+          Select Your Country
+        </label>
+        <select
+          value={country}
+          onChange={handleCountryChange}
+          className="select-field"
+        >
+          {countries.map((c) => (
+            <option key={c.code} value={c.code}>
+              {c.name}
+            </option>
+          ))}
+        </select>
+        <p className="text-xs text-gray-500 mt-2">
+          VeriBridge works in 35+ countries worldwide
+        </p>
+      </div>
+      
       {/* OpenStreetMap Search */}
       <div className="relative" ref={resultsRef}>
         <label className="label flex items-center gap-2">
@@ -138,7 +187,7 @@ export default function AddressBuilder() {
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
             onFocus={() => searchResults.length > 0 && setShowResults(true)}
-            placeholder="Type to search places in Kenya..."
+            placeholder={`Type to search places in ${countryName}...`}
             className="input-field pr-10"
           />
           <div className="absolute right-3 top-1/2 -translate-y-1/2">
@@ -187,63 +236,77 @@ export default function AddressBuilder() {
             type="text"
             value={building}
             onChange={(e) => setBuilding(e.target.value)}
-            placeholder="e.g., Mwangi Flats, Skyline Apartments"
+            placeholder="e.g., Green Valley Apartments, Unit 12B"
             className="input-field"
           />
         </div>
         
         <div>
           <label htmlFor="street" className="label">
-            Street Name
+            Street Name & Number
           </label>
           <input
             id="street"
             type="text"
             value={street}
             onChange={(e) => setStreet(e.target.value)}
-            placeholder="e.g., Biashara Street"
+            placeholder="e.g., 123 Main Street"
             className="input-field"
           />
         </div>
         
         <div>
           <label htmlFor="area" className="label">
-            Area / Estate / Neighborhood
+            Area / Neighborhood / District
           </label>
           <input
             id="area"
             type="text"
             value={area}
             onChange={(e) => setArea(e.target.value)}
-            placeholder="e.g., Westlands, Kilimani"
+            placeholder="e.g., Downtown, Westside"
             className="input-field"
           />
         </div>
         
         <div>
           <label htmlFor="city" className="label">
-            City
+            City / Town
           </label>
           <input
             id="city"
             type="text"
             value={city}
             onChange={(e) => setCity(e.target.value)}
-            placeholder="e.g., Nairobi"
+            placeholder="e.g., Lagos, Manila, Mumbai"
+            className="input-field"
+          />
+        </div>
+        
+        <div>
+          <label htmlFor="state" className="label">
+            State / Province / Region
+          </label>
+          <input
+            id="state"
+            type="text"
+            value={state}
+            onChange={(e) => setState(e.target.value)}
+            placeholder="e.g., California, Lagos State"
             className="input-field"
           />
         </div>
         
         <div>
           <label htmlFor="postalCode" className="label">
-            Postal Code
+            Postal / ZIP Code
           </label>
           <input
             id="postalCode"
             type="text"
             value={postalCode}
             onChange={(e) => setPostalCode(e.target.value)}
-            placeholder="e.g., 00100"
+            placeholder="e.g., 10001, 00100"
             className="input-field"
           />
         </div>
@@ -357,4 +420,3 @@ function WhatsAppShareButton({ address }) {
     </button>
   );
 }
-

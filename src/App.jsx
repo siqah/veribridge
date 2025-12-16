@@ -86,10 +86,10 @@ function App() {
         {/* Title Section */}
         <div className="mb-8">
           <h2 className="text-2xl sm:text-3xl font-bold text-white mb-2">
-            KYC Address Verification
+            Global Address Verification
           </h2>
           <p className="text-gray-400">
-            Format your address for Google Play Console, Amazon, PayPal & more
+            Format your address for Google Play, Amazon, PayPal & 50+ platforms worldwide
           </p>
         </div>
         

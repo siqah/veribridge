@@ -1,12 +1,14 @@
 /**
  * Address formatting utility for VeriBridge
- * Cleans and formats Kenyan addresses for international KYC compliance
+ * Cleans and formats addresses for international KYC compliance
+ * Supports worldwide addresses, not just Kenya
  */
 
 /**
- * List of colloquialisms to remove from addresses
+ * List of colloquialisms to remove from addresses (international)
  */
 const COLLOQUIALISMS = [
+  // English
   "opposite",
   "near",
   "behind",
@@ -16,6 +18,22 @@ const COLLOQUIALISMS = [
   "close to",
   "around",
   "off",
+  "by the",
+  "across from",
+  "in front of",
+  // Spanish
+  "cerca de",
+  "frente a",
+  "al lado de",
+  "detrás de",
+  // Portuguese
+  "perto de",
+  "em frente",
+  "ao lado de",
+  // French
+  "près de",
+  "en face de",
+  "à côté de",
 ];
 
 /**
@@ -36,36 +54,42 @@ function removeColloquialisms(text) {
 
   // Clean up extra spaces and commas
   cleaned = cleaned
-    .replace(/\s+/g, " ") // Multiple spaces to single space
-    .replace(/,\s*,/g, ",") // Multiple commas to single comma
-    .replace(/,\s*$/, "") // Trailing comma
-    .replace(/^\s*,/, "") // Leading comma
+    .replace(/\s+/g, " ")
+    .replace(/,\s*,/g, ",")
+    .replace(/,\s*$/, "")
+    .replace(/^\s*,/, "")
     .trim();
 
   return cleaned;
 }
 
 /**
- * Formats address components into a strict Western-style address
- * Format: [Building Name], [Street Name], [Area/Estate], [City], [Postal Code]
+ * Formats address components into a standard international format
+ * Format varies by country but generally:
+ * [Building], [Street], [Area], [City], [State/Province], [Postal Code], [Country]
  *
  * @param {Object} addressComponents - Object containing address parts
  * @param {string} addressComponents.building - Building or landmark name
  * @param {string} addressComponents.street - Street name
  * @param {string} addressComponents.area - Area or estate name
  * @param {string} addressComponents.city - City name
+ * @param {string} addressComponents.state - State/Province/Region
  * @param {string} addressComponents.postalCode - Postal code
+ * @param {string} addressComponents.countryName - Country name
  * @returns {string} - Formatted address string
  */
 export function formatAddress(addressComponents) {
-  const { building, street, area, city, postalCode } = addressComponents;
+  const { building, street, area, city, state, postalCode, countryName } =
+    addressComponents;
 
   // Clean each component
   const cleanBuilding = removeColloquialisms(building);
   const cleanStreet = removeColloquialisms(street);
   const cleanArea = removeColloquialisms(area);
   const cleanCity = removeColloquialisms(city);
+  const cleanState = state?.trim() || "";
   const cleanPostalCode = postalCode?.trim() || "";
+  const cleanCountry = countryName?.trim() || "";
 
   // Build the address array (only include non-empty parts)
   const addressParts = [
@@ -73,7 +97,9 @@ export function formatAddress(addressComponents) {
     cleanStreet,
     cleanArea,
     cleanCity,
+    cleanState,
     cleanPostalCode,
+    cleanCountry,
   ].filter((part) => part && part.length > 0);
 
   // Join with commas and clean up
@@ -96,7 +122,7 @@ export function validateAddress(address) {
 
   const lowerAddress = address.toLowerCase();
 
-  // Check for P.O. Box variations
+  // Check for P.O. Box variations (international)
   const poBoxPatterns = [
     "p.o. box",
     "p.o box",
@@ -104,6 +130,11 @@ export function validateAddress(address) {
     "pobox",
     "private bag",
     "p o box",
+    "apartado",
+    "casilla",
+    "caixa postal",
+    "boîte postale",
+    "postfach",
   ];
 
   for (const pattern of poBoxPatterns) {
@@ -112,7 +143,7 @@ export function validateAddress(address) {
         isValid: false,
         severity: "error",
         message:
-          "⚠️ ADDRESS REJECTED: Contains P.O. Box. Global platforms will ban this.",
+          "⚠️ ADDRESS REJECTED: Contains P.O. Box. Global platforms will reject this.",
       };
     }
   }
@@ -130,9 +161,20 @@ export function validateAddress(address) {
     };
   }
 
+  // Check minimum components (at least city or postal code)
+  const parts = address.split(",").filter((p) => p.trim().length > 0);
+  if (parts.length < 3) {
+    return {
+      isValid: true,
+      severity: "warning",
+      message:
+        "⚠️ Address seems incomplete. Add more details for better verification.",
+    };
+  }
+
   return {
     isValid: true,
     severity: "success",
-    message: "✓ Address format looks good!",
+    message: "✓ Address format looks good for international platforms!",
   };
 }
