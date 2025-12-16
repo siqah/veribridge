@@ -1,8 +1,9 @@
 import { useEffect, useState, useCallback, useRef } from 'react';
-import { MapPin, AlertCircle, CheckCircle2, Search, Copy, Share2, Check, Globe } from 'lucide-react';
+import { MapPin, AlertCircle, CheckCircle2, Search, Copy, Share2, Check, Globe, Shield } from 'lucide-react';
 import { useAddressStore } from '../store/addressStore';
 import { formatAddress, validateAddress } from '../utils/addressLogic';
 import { getCountriesSorted, getCountryByCode, getAllRegions } from '../data/countries';
+import PreflightChecker from './PreflightChecker';
 
 // OpenStreetMap Nominatim API endpoint
 const NOMINATIM_API = 'https://nominatim.openstreetmap.org/search';
@@ -350,6 +351,15 @@ export default function AddressBuilder() {
           <div className="flex flex-wrap gap-3 mt-4">
             <CopyButton text={formattedAddress} />
             <WhatsAppShareButton address={formattedAddress} />
+          </div>
+          
+          {/* Pre-Flight Verification */}
+          <div className="mt-6 pt-6 border-t border-gray-700/50">
+            <div className="flex items-center gap-2 mb-4">
+              <Shield className="w-5 h-5 text-blue-400" />
+              <h3 className="text-sm font-semibold text-gray-300">Pre-Flight Verification</h3>
+            </div>
+            <PreflightChecker />
           </div>
         </div>
       )}

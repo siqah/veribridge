@@ -1,204 +1,251 @@
 import { useState } from 'react';
-import { Shield, Lock, MapPin, CheckCircle, Printer, Search, Smartphone, FileText } from 'lucide-react';
+import { Shield, Lock, MapPin, CheckCircle, Printer, Search, Smartphone, FileText, Package, Home, ChevronRight, Menu, X } from 'lucide-react';
+import HomePage from './components/HomePage';
 import AddressBuilder from './components/AddressBuilder';
 import BankGuides from './components/BankGuides';
 import BankCardGenerator from './components/BankCardGenerator';
 import AffidavitGenerator from './components/AffidavitGenerator';
+import VerificationPackageGenerator from './components/VerificationPackageGenerator';
 import OCRValidator from './components/OCRValidator';
 import { useAddressStore } from './store/addressStore';
 import './App.css';
 
 function App() {
-  const [currentStep, setCurrentStep] = useState(1);
+  const [currentView, setCurrentView] = useState('home'); // 'home' or step number
+  const [sidebarOpen, setSidebarOpen] = useState(false);
   const { formattedAddress, validation } = useAddressStore();
   
   // Determine step completion status
   const isStep1Complete = formattedAddress && validation?.severity === 'success';
   
-  const steps = [
+  const navItems = [
     {
-      number: 1,
+      id: 'home',
+      title: 'Home',
+      icon: Home,
+      description: 'Learn about VeriBridge',
+    },
+    {
+      id: 1,
       title: 'Address Architect',
-      subtitle: 'Build your compliant address',
+      subtitle: 'Build your address',
       icon: MapPin,
       complete: isStep1Complete,
-      description: 'Build a compliant address for international KYC verification',
+      description: 'Format your address for international KYC compliance',
     },
     {
-      number: 2,
+      id: 2,
+      title: 'Verification Package',
+      subtitle: 'Generate documents',
+      icon: Package,
+      complete: false,
+      badge: 'MAIN',
+      description: 'Generate Certificate, Affidavit & Cover Letter',
+    },
+    {
+      id: 3,
       title: 'Quick Update',
-      subtitle: 'Update via mobile banking',
+      subtitle: 'Mobile banking',
       icon: Smartphone,
       complete: false,
-      description: 'Update your bank profile instantly via mobile app - no branch visit needed!',
+      description: 'Update your bank profile via mobile app',
     },
     {
-      number: 3,
+      id: 4,
       title: 'Bank Instructions',
-      subtitle: 'Generate teller card',
+      subtitle: 'Teller card',
       icon: Printer,
       complete: false,
-      description: 'Generate a PDF for the bank teller if visiting a branch',
+      description: 'Generate PDF for the bank teller',
     },
     {
-      number: 4,
-      title: 'Affidavit',
+      id: 5,
+      title: 'Affidavit Only',
       subtitle: 'Sworn declaration',
       icon: FileText,
       complete: false,
-      description: 'Generate a legal affidavit of residence (alternative to bank statement)',
+      description: 'Generate just the affidavit of residence',
     },
     {
-      number: 5,
+      id: 6,
       title: 'Validate Document',
-      subtitle: 'Verify before submitting',
+      subtitle: 'OCR scan',
       icon: Search,
       complete: false,
-      description: 'Scan your document to ensure it passes Google/Amazon verification',
+      description: 'Scan your document before submitting',
     },
   ];
 
-  const totalSteps = steps.length;
+  const handleNavClick = (id) => {
+    setCurrentView(id);
+    setSidebarOpen(false);
+  };
+
+  const currentNavItem = navItems.find(item => item.id === currentView);
 
   return (
-    <div className="app-container">
-      <div className="max-w-6xl mx-auto">
-        {/* Header */}
-        <header className="flex flex-col sm:flex-row items-center justify-between gap-4 mb-8">
-          <div className="flex items-center gap-3">
-            <div className="p-3 rounded-xl bg-gradient-to-br from-blue-500 to-cyan-500 shadow-lg shadow-blue-500/30">
-              <Shield className="w-8 h-8 text-white" />
-            </div>
-            <div>
-              <h1 className="text-2xl sm:text-3xl font-bold">
-                <span className="header-logo">Veri</span>
-                <span className="header-logo-accent">Bridge</span>
-              </h1>
-            </div>
+    <div className="min-h-screen" style={{ background: 'var(--bg-primary)' }}>
+      {/* Mobile Header */}
+      <header className="lg:hidden flex items-center justify-between p-4 border-b" style={{ borderColor: 'var(--border-color)' }}>
+        <div className="flex items-center gap-2">
+          <Shield className="w-6 h-6 text-blue-400" />
+          <span className="font-bold text-white">VeriBridge</span>
+        </div>
+        <button
+          onClick={() => setSidebarOpen(!sidebarOpen)}
+          className="p-2 rounded-lg hover:bg-white/10"
+        >
+          {sidebarOpen ? <X className="w-6 h-6 text-white" /> : <Menu className="w-6 h-6 text-white" />}
+        </button>
+      </header>
+
+      <div className="flex">
+        {/* Main Content - Left Side */}
+        <main className="flex-1 min-h-screen">
+          <div className="max-w-4xl mx-auto p-6 lg:p-8">
+            {/* Desktop Header */}
+            <header className="hidden lg:flex items-center justify-between mb-8">
+              <div className="flex items-center gap-3">
+                <div className="p-2.5 rounded-xl bg-gradient-to-br from-blue-500 to-cyan-500 shadow-lg shadow-blue-500/30">
+                  <Shield className="w-7 h-7 text-white" />
+                </div>
+                <div>
+                  <h1 className="text-2xl font-bold">
+                    <span className="text-white">Veri</span>
+                    <span className="text-blue-400">Bridge</span>
+                  </h1>
+                  <p className="text-xs text-gray-500">Global Address Verification</p>
+                </div>
+              </div>
+              
+              <div className="flex items-center gap-2 px-3 py-1.5 rounded-full text-xs" style={{ background: 'var(--bg-card)', border: '1px solid var(--border-color)' }}>
+                <Lock className="w-3 h-3 text-green-400" />
+                <span className="text-gray-400">100% Private</span>
+              </div>
+            </header>
+            
+            {/* Content Area */}
+            {currentView === 'home' ? (
+              <HomePage onGetStarted={() => setCurrentView(1)} />
+            ) : (
+              <div className="card">
+                {/* Step Header */}
+                <div className="mb-6 pb-6 border-b" style={{ borderColor: 'var(--border-color)' }}>
+                  <div className="flex items-center gap-2 text-sm text-gray-500 mb-2">
+                    <button onClick={() => setCurrentView('home')} className="hover:text-white transition-colors">
+                      Home
+                    </button>
+                    <ChevronRight className="w-4 h-4" />
+                    <span className="text-blue-400">{currentNavItem?.title}</span>
+                  </div>
+                  <h2 className="text-2xl font-bold text-white">{currentNavItem?.title}</h2>
+                  <p className="text-sm text-gray-400 mt-1">{currentNavItem?.description}</p>
+                </div>
+                
+                {/* Step Content */}
+                <div className="fade-in">
+                  {currentView === 1 && <AddressBuilder />}
+                  {currentView === 2 && <VerificationPackageGenerator />}
+                  {currentView === 3 && <BankGuides />}
+                  {currentView === 4 && <BankCardGenerator />}
+                  {currentView === 5 && <AffidavitGenerator />}
+                  {currentView === 6 && <OCRValidator />}
+                </div>
+              </div>
+            )}
+            
+            {/* Footer */}
+            <footer className="mt-12 text-center text-xs text-gray-600">
+              <p>Built with ❤️ for developers worldwide</p>
+            </footer>
+          </div>
+        </main>
+        
+        {/* Sidebar - Right Side */}
+        <aside className={`
+          fixed lg:relative inset-y-0 right-0 z-50
+          w-72 lg:w-64 
+          transform transition-transform duration-300 ease-in-out
+          ${sidebarOpen ? 'translate-x-0' : 'translate-x-full lg:translate-x-0'}
+          border-l flex-shrink-0
+        `} style={{ background: 'var(--bg-secondary)', borderColor: 'var(--border-color)' }}>
+          {/* Sidebar Header */}
+          <div className="p-4 border-b" style={{ borderColor: 'var(--border-color)' }}>
+            <h3 className="text-sm font-semibold text-gray-400 uppercase tracking-wider">Navigation</h3>
           </div>
           
-          <div className="privacy-badge">
-            <Lock className="w-3.5 h-3.5" />
-            <span>100% Local Processing</span>
-          </div>
-        </header>
-        
-        {/* Title Section */}
-        <div className="mb-8">
-          <h2 className="text-2xl sm:text-3xl font-bold text-white mb-2">
-            Global Address Verification
-          </h2>
-          <p className="text-gray-400">
-            Format your address for Google Play, Amazon, PayPal & 50+ platforms worldwide
-          </p>
-        </div>
-        
-        {/* Main Layout - Sidebar + Content */}
-        <div className="flex flex-col lg:flex-row gap-8">
-          {/* Step Sidebar */}
-          <aside className="lg:w-64 flex-shrink-0">
-            <div className="step-sidebar">
-              {steps.map((step) => {
-                const Icon = step.icon;
-                const isActive = currentStep === step.number;
-                const isComplete = step.complete;
-                
-                return (
-                  <div 
-                    key={step.number} 
-                    className="step-item cursor-pointer"
-                    onClick={() => setCurrentStep(step.number)}
-                  >
-                    <div className={`step-icon ${isActive ? 'step-icon-active pulse-glow' : ''} ${isComplete ? 'step-icon-complete' : ''}`}>
-                      {isComplete ? (
-                        <CheckCircle className="w-5 h-5 text-white" />
-                      ) : (
-                        <Icon className={`w-5 h-5 ${isActive ? 'text-white' : 'text-gray-500'}`} />
+          {/* Nav Items */}
+          <nav className="p-2 overflow-y-auto" style={{ maxHeight: 'calc(100vh - 60px)' }}>
+            {navItems.map((item) => {
+              const Icon = item.icon;
+              const isActive = currentView === item.id;
+              const isComplete = item.complete;
+              
+              return (
+                <button
+                  key={item.id}
+                  onClick={() => handleNavClick(item.id)}
+                  className={`
+                    w-full flex items-center gap-3 p-3 rounded-lg mb-1 text-left transition-all
+                    ${isActive 
+                      ? 'bg-blue-500/20 border border-blue-500/40' 
+                      : 'hover:bg-white/5 border border-transparent'
+                    }
+                  `}
+                >
+                  <div className={`
+                    w-9 h-9 rounded-lg flex items-center justify-center flex-shrink-0
+                    ${isComplete 
+                      ? 'bg-green-500' 
+                      : isActive 
+                        ? 'bg-blue-500' 
+                        : 'bg-gray-700'
+                    }
+                  `}>
+                    {isComplete ? (
+                      <CheckCircle className="w-4 h-4 text-white" />
+                    ) : (
+                      <Icon className="w-4 h-4 text-white" />
+                    )}
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-center gap-2">
+                      <span className={`text-sm font-medium truncate ${isActive ? 'text-white' : 'text-gray-300'}`}>
+                        {item.title}
+                      </span>
+                      {item.badge && (
+                        <span className="text-[9px] font-bold px-1.5 py-0.5 rounded bg-gradient-to-r from-purple-500 to-pink-500 text-white">
+                          {item.badge}
+                        </span>
                       )}
                     </div>
-                    <div className="pt-2">
-                      <p className={`font-semibold text-sm ${isActive ? 'text-white' : 'text-gray-400'}`}>
-                        {step.title}
-                      </p>
-                      <p className="text-xs text-gray-500 mt-0.5">
-                        {step.subtitle}
-                      </p>
-                    </div>
+                    {item.subtitle && (
+                      <span className="text-xs text-gray-500 truncate block">{item.subtitle}</span>
+                    )}
                   </div>
-                );
-              })}
-            </div>
-          </aside>
+                  <ChevronRight className={`w-4 h-4 flex-shrink-0 ${isActive ? 'text-blue-400' : 'text-gray-600'}`} />
+                </button>
+              );
+            })}
+          </nav>
           
-          {/* Main Content */}
-          <main className="flex-1 min-w-0">
-            <div className="card fade-in">
-              {/* Step Header */}
-              <div className="flex items-center justify-between mb-6 pb-6 border-b border-gray-700/50">
-                <div>
-                  <p className="text-sm text-blue-400 font-medium mb-1">
-                    Step {currentStep}/{totalSteps}
-                  </p>
-                  <h3 className="text-xl sm:text-2xl font-bold text-white">
-                    {steps[currentStep - 1].title}
-                  </h3>
-                  <p className="text-sm text-gray-400 mt-1">
-                    {steps[currentStep - 1].description}
-                  </p>
-                </div>
-              </div>
-              
-              {/* Step Content */}
-              <div className="fade-in">
-                {currentStep === 1 && <AddressBuilder />}
-                {currentStep === 2 && <BankGuides />}
-                {currentStep === 3 && <BankCardGenerator />}
-                {currentStep === 4 && <AffidavitGenerator />}
-                {currentStep === 5 && <OCRValidator />}
-              </div>
-              
-              {/* Navigation Buttons */}
-              <div className="flex justify-between items-center mt-8 pt-6 border-t border-gray-700/50">
-                <button
-                  onClick={() => setCurrentStep(Math.max(1, currentStep - 1))}
-                  disabled={currentStep === 1}
-                  className="btn-secondary disabled:opacity-50 disabled:cursor-not-allowed"
-                >
-                  Back
-                </button>
-                
-                <button
-                  onClick={() => setCurrentStep(Math.min(totalSteps, currentStep + 1))}
-                  disabled={currentStep === totalSteps}
-                  className="btn-primary disabled:opacity-50 disabled:cursor-not-allowed"
-                >
-                  {currentStep === totalSteps ? 'Finish' : 'Continue'}
-                </button>
-              </div>
+          {/* Sidebar Footer */}
+          <div className="absolute bottom-0 left-0 right-0 p-4 border-t" style={{ borderColor: 'var(--border-color)', background: 'var(--bg-secondary)' }}>
+            <div className="flex items-center gap-2 text-xs text-gray-500">
+              <Lock className="w-3 h-3 text-green-400" />
+              <span>All data stays on your device</span>
             </div>
-            
-            {/* Info Card */}
-            <div className="mt-6 info-box">
-              <div className="flex items-start gap-3">
-                <Lock className="w-5 h-5 text-blue-400 flex-shrink-0 mt-0.5" />
-                <div>
-                  <h4 className="text-sm font-semibold text-blue-300 mb-1">Your Privacy is Protected</h4>
-                  <p className="text-sm text-blue-200/70">
-                    All document processing happens locally in your browser. We never store, transmit, or access your personal information.
-                  </p>
-                </div>
-              </div>
-            </div>
-          </main>
-        </div>
-        
-        {/* Footer */}
-        <footer className="mt-12 text-center text-sm text-gray-500 border-t border-gray-800 pt-8">
-          <p className="mb-2">
-            Built with ❤️ for developers navigating international compliance challenges
-          </p>
-        </footer>
+          </div>
+        </aside>
       </div>
+      
+      {/* Mobile Overlay */}
+      {sidebarOpen && (
+        <div 
+          className="fixed inset-0 bg-black/50 z-40 lg:hidden"
+          onClick={() => setSidebarOpen(false)}
+        />
+      )}
     </div>
   );
 }
