@@ -1,8 +1,9 @@
 import { useState } from 'react';
-import { FileText, Download, CheckCircle2, Package, Shield, AlertTriangle, User, Phone, Mail, CreditCard } from 'lucide-react';
+import { FileText, Download, CheckCircle2, Package, Shield, AlertTriangle, User, Phone, Mail, CreditCard, Cloud } from 'lucide-react';
 import { useAddressStore } from '../store/addressStore';
 import { generateAffidavitPDF, downloadAffidavit } from '../utils/affidavitTemplate';
 import { generateVerificationCertificate, generateCoverLetter, downloadDocument } from '../utils/verificationPackage';
+import { createVerification } from '../services/api';
 
 export default function VerificationPackageGenerator() {
   const [fullName, setFullName] = useState('');
@@ -12,6 +13,7 @@ export default function VerificationPackageGenerator() {
   const [platform, setPlatform] = useState('Google Play Console');
   const [isGenerating, setIsGenerating] = useState(false);
   const [generatedDocs, setGeneratedDocs] = useState([]);
+  const [apiError, setApiError] = useState(null);
   
   const { formattedAddress, countryName, validation } = useAddressStore();
   
@@ -33,6 +35,7 @@ export default function VerificationPackageGenerator() {
     
     setIsGenerating(true);
     setGeneratedDocs([]);
+    setApiError(null);
     
     try {
       const userData = {
@@ -46,38 +49,96 @@ export default function VerificationPackageGenerator() {
         city: 'Nairobi',
       };
       
-      // Generate Certificate (with QR code) - this is async
-      const { doc: certDoc, verificationId, verificationUrl } = await generateVerificationCertificate(userData);
-      userData.verificationId = verificationId;
+      // Call backend API to create verification record
+      console.log('Creating verification via API...');
+      const apiResponse = await createVerification(userData);
       
-      // Generate Affidavit
-      const affidavitDoc = generateAffidavitPDF(userData);
-      
-      // Generate Cover Letter (with QR code) - this is async
-      const coverLetterDoc = await generateCoverLetter(userData);
-      
-      setGeneratedDocs([
-        { 
-          name: 'Verification Certificate', 
-          doc: certDoc, 
-          filename: `VeriBadge_Certificate_${fullName.replace(/\s+/g, '_')}.pdf`,
-          verificationId,
-          verificationUrl,
-        },
-        { 
-          name: 'Affidavit of Residence', 
-          doc: affidavitDoc, 
-          filename: `Affidavit_${fullName.replace(/\s+/g, '_')}.pdf` 
-        },
-        { 
-          name: 'Cover Letter', 
-          doc: coverLetterDoc, 
-          filename: `Cover_Letter_${platform.replace(/\s+/g, '_')}.pdf` 
-        },
-      ]);
+      if (apiResponse.success) {
+        console.log('API Response:', apiResponse.data);
+        
+        // Use server-generated verification ID and QR code
+        userData.verificationId = apiResponse.data.verificationId;
+        userData.verificationUrl = apiResponse.data.verificationUrl;
+        userData.qrCode = apiResponse.data.qrCode;
+        
+        // Generate Certificate using server data
+        const { doc: certDoc } = await generateVerificationCertificate(userData);
+        
+        // Generate Affidavit
+        const affidavitDoc = generateAffidavitPDF(userData);
+        
+        // Generate Cover Letter using server data
+        const coverLetterDoc = await generateCoverLetter(userData);
+        
+        setGeneratedDocs([
+          { 
+            name: 'Verification Certificate', 
+            doc: certDoc, 
+            filename: `VeriBadge_Certificate_${fullName.replace(/\s+/g, '_')}.pdf`,
+            verificationId: userData.verificationId,
+            verificationUrl: userData.verificationUrl,
+          },
+          { 
+            name: 'Affidavit of Residence', 
+            doc: affidavitDoc, 
+            filename: `Affidavit_${fullName.replace(/\s+/g, '_')}.pdf` 
+          },
+          { 
+            name: 'Cover Letter', 
+            doc: coverLetterDoc, 
+            filename: `Cover_Letter_${platform.replace(/\s+/g, '_')}.pdf` 
+          },
+        ]);
+      } else {
+        throw new Error(apiResponse.error || 'Failed to create verification');
+      }
       
     } catch (error) {
       console.error('Error generating package:', error);
+      setApiError(error.message || 'Failed to connect to backend API. Make sure the server is running on port 3001.');
+      
+      // Fallback to local generation if API fails
+      console.log('Falling back to local generation...');
+      try {
+        const localUserData = {
+          fullName,
+          idNumber,
+          phone,
+          email,
+          formattedAddress,
+          country: countryName,
+          platform,
+          city: 'Nairobi',
+        };
+        
+        const { doc: certDoc, verificationId, verificationUrl } = await generateVerificationCertificate(localUserData);
+        localUserData.verificationId = verificationId;
+        
+        const affidavitDoc = generateAffidavitPDF(localUserData);
+        const coverLetterDoc = await generateCoverLetter(localUserData);
+        
+        setGeneratedDocs([
+          { 
+            name: 'Verification Certificate', 
+            doc: certDoc, 
+            filename: `VeriBadge_Certificate_${fullName.replace(/\s+/g, '_')}.pdf`,
+            verificationId,
+            verificationUrl,
+          },
+          { 
+            name: 'Affidavit of Residence', 
+            doc: affidavitDoc, 
+            filename: `Affidavit_${fullName.replace(/\s+/g, '_')}.pdf` 
+          },
+          { 
+            name: 'Cover Letter', 
+            doc: coverLetterDoc, 
+            filename: `Cover_Letter_${platform.replace(/\s+/g, '_')}.pdf` 
+          },
+        ]);
+      } catch (fallbackError) {
+        console.error('Fallback generation also failed:', fallbackError);
+      }
     } finally {
       setIsGenerating(false);
     }
@@ -109,6 +170,30 @@ export default function VerificationPackageGenerator() {
           </div>
         </div>
       </div>
+      
+      {/* API Connection Status */}
+      <div className="flex items-center gap-2 text-xs">
+        <Cloud className="w-4 h-4 text-blue-400" />
+        <span className="text-gray-400">
+          Connected to VeriBridge API {apiError && '(Fallback mode)'}
+        </span>
+      </div>
+      
+      {/* API Error Alert */}
+      {apiError && (
+        <div className="p-3 rounded-lg bg-yellow-500/10 border border-yellow-500/30">
+          <div className="flex items-start gap-2">
+            <AlertTriangle className="w-4 h-4 text-yellow-400 flex-shrink-0 mt-0.5" />
+            <div>
+              <p className="text-xs font-semibold text-yellow-300">API Connection Issue</p>
+              <p className="text-xs text-yellow-200/70 mt-1">{apiError}</p>
+              <p className="text-xs text-yellow-200/50 mt-1">
+                Documents generated locally (verification will not be stored online).
+              </p>
+            </div>
+          </div>
+        </div>
+      )}
       
       {/* Address Preview */}
       <div>
