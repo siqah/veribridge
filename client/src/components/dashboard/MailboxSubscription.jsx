@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { MapPin, CreditCard, Check } from 'lucide-react';
+import PaystackCheckout from '../PaystackCheckout';
 
 const LOCATIONS = [
   {
@@ -59,19 +60,31 @@ export default function MailboxSubscription({ onSubscribe, onCancel }) {
   const [selectedTier, setSelectedTier] = useState('PRO');
   const [isProcessing, setIsProcessing] = useState(false);
 
-  const handleSubscribe = async () => {
+  const handlePaymentSuccess = async (reference) => {
     setIsProcessing(true);
     try {
       const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3001';
       const userId = 'user_123'; // In production, get from auth context
 
+      // Verify payment
+      await fetch(`${API_URL}/api/payments/paystack/verify`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          reference: reference.reference,
+          orderType: 'MAILBOX_SUBSCRIPTION'
+        })
+      });
+
+      // Create subscription
       const response = await fetch(`${API_URL}/api/mailbox/subscribe`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           userId,
           location: selectedLocation,
-          tier: selectedTier
+          tier: selectedTier,
+          paymentRef: reference.reference
         })
       });
 
@@ -195,13 +208,19 @@ export default function MailboxSubscription({ onSubscribe, onCancel }) {
         </div>
 
         <div className="flex gap-3">
-          <button
-            onClick={handleSubscribe}
-            disabled={isProcessing}
-            className="btn-primary flex-1 disabled:opacity-50 disabled:cursor-not-allowed"
-          >
-            {isProcessing ? 'Processing...' : 'Subscribe Now'}
-          </button>
+          <PaystackCheckout
+            amount={selectedTierData?.price || 2000}
+            email="user@example.com"
+            metadata={{
+              orderType: 'MAILBOX_SUBSCRIPTION',
+              location: selectedLocation,
+              tier: selectedTier,
+              address: selectedLocationData?.address
+            }}
+            onSuccess={handlePaymentSuccess}
+            onClose={() => console.log('Payment cancelled')}
+            buttonText={`Pay KES ${selectedTierData?.price.toLocaleString()}`}
+          />
           {onCancel && (
             <button onClick={onCancel} className="btn-secondary">
               Cancel

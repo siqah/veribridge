@@ -10,6 +10,7 @@ import morgan from "morgan";
 import verificationRoutes from "./routes/verification.js";
 import paymentsRoutes from "./routes/payments.js";
 import servicesRoutes from "./routes/services.js";
+import authRoutes from "./routes/auth.js";
 // Freelancer OS Routes
 import companyOrdersRoutes from "./routes/companyOrders.js";
 import formationRoutes from "./routes/formation.js"; // New formation engine
@@ -50,6 +51,7 @@ app.get("/health", (req, res) => {
 app.use("/api/verify", verificationRoutes);
 app.use("/api/payments", paymentsRoutes);
 app.use("/api/services", servicesRoutes);
+app.use("/api/auth", authRoutes);
 
 // Freelancer OS API Routes
 app.use("/api/company-orders", companyOrdersRoutes); // Legacy

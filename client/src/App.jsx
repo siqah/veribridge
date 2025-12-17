@@ -12,10 +12,18 @@ import CompanyFormation from './components/dashboard/CompanyFormation';
 import Invoicing from './components/dashboard/Invoicing';
 import Mailbox from './components/dashboard/Mailbox';
 import ApiKeys from './components/dashboard/ApiKeys';
+import MyOrders from './components/dashboard/MyOrders';
 // Admin components
 import FormationOrders from './components/admin/FormationOrders';
+// Auth components
+import Login from './components/auth/Login';
+import Signup from './components/auth/Signup';
+// Legal components
+import TermsOfService from './components/legal/TermsOfService';
+import PrivacyPolicy from './components/legal/PrivacyPolicy';
 import { useAddressStore } from './store/addressStore';
 import { useTheme } from './utils/useTheme';
+import { useAuth } from './contexts/AuthContext';
 import './App.css';
 
 function App() {
@@ -23,6 +31,7 @@ function App() {
   const [sidebarOpen, setSidebarOpen] = useState(false); // Mobile sidebar ONLY
   const { theme, toggleTheme } = useTheme();
   const { formattedAddress, validation } = useAddressStore();
+  const { user, logout, isAuthenticated } = useAuth();
   
   // Determine step completion status
   const isStep1Complete = formattedAddress && validation?.severity === 'success';
@@ -93,6 +102,14 @@ function App() {
       category: 'verification'
     },
     // BUSINESS SERVICES
+    {
+      id: 'my-orders',
+      title: 'My Orders',
+      subtitle: 'Track orders',
+      icon: Building2,
+      description: 'View company formations',
+      category: 'business'
+    },
     {
       id: 'company-formation',
       title: 'Company Formation',
@@ -247,6 +264,31 @@ function App() {
         </div>
 
         <div className="flex items-center gap-3">
+            {/* User Auth Button */}
+            {isAuthenticated ? (
+              <div className="flex items-center gap-3">
+                <div className="hidden sm:block text-sm" style={{ color: 'var(--text-secondary)' }}>
+                  {user?.fullName || user?.email}
+                </div>
+                <button
+                  onClick={() => {
+                    logout();
+                    setCurrentView('home');
+                  }}
+                  className="px-3 py-1.5 text-xs font-semibold rounded-md transition-colors bg-red-500/20 text-red-400 hover:bg-red-500/30 border border-red-500/30"
+                >
+                  Logout
+                </button>
+              </div>
+            ) : (
+              <button
+                onClick={() => setCurrentView('login')}
+                className="px-3 py-1.5 text-xs font-semibold rounded-md transition-colors bg-blue-500/20 text-blue-400 hover:bg-blue-500/30 border border-blue-500/30"
+              >
+                Login
+              </button>
+            )}
+            
             {/* Admin Link */}
             <button
               onClick={() => handleNavClick('admin-formations')}
@@ -517,6 +559,22 @@ function App() {
                 <div className="card">
                   <OCRValidator />
                 </div>
+              ) : currentView === 'login' ? (
+                <Login 
+                  onSuccess={() => setCurrentView('home')}
+                  onSwitchToSignup={() => setCurrentView('signup')}
+                />
+              ) : currentView === 'signup' ? (
+                <Signup 
+                  onSuccess={() => setCurrentView('home')}
+                  onSwitchToLogin={() => setCurrentView('login')}
+                />
+              ) : currentView === 'terms' ? (
+                <TermsOfService />
+              ) : currentView === 'privacy' ? (
+                <PrivacyPolicy />
+              ) : currentView === 'my-orders' ? (
+                <MyOrders />
               ) : currentView === 'company-formation' ? (
                 <CompanyFormation />
               ) : currentView === 'invoicing' ? (
@@ -533,6 +591,15 @@ function App() {
             {/* Footer */}
             <footer className="mt-12 text-center text-xs" style={{ color: 'var(--text-muted)' }}>
               <p>Built with ❤️ for developers worldwide</p>
+              <div className="mt-2 flex justify-center gap-4">
+                <button onClick={() => setCurrentView('terms')} className="hover:underline">
+                  Terms of Service
+                </button>
+                <span>•</span>
+                <button onClick={() => setCurrentView('privacy')} className="hover:underline">
+                  Privacy Policy
+                </button>
+              </div>
             </footer>
           </div>
         </main>
