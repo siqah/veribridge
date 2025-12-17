@@ -304,4 +304,79 @@ router.get("/pricing/all", async (req, res) => {
   });
 });
 
+/**
+ * POST /api/payments/paystack/verify
+ * Verify Paystack payment and update order status
+ */
+router.post("/paystack/verify", async (req, res) => {
+  try {
+    const { reference, orderId, orderType } = req.body;
+
+    if (!reference) {
+      return res.status(400).json({ error: "Payment reference required" });
+    }
+
+    const secretKey = process.env.PAYSTACK_SECRET_KEY;
+
+    if (!secretKey) {
+      console.error("⚠️ PAYSTACK_SECRET_KEY not set in .env");
+      return res.status(500).json({ error: "Payment configuration error" });
+    }
+
+    // Verify payment with Paystack
+    const response = await axios.get(
+      `https://api.paystack.co/transaction/verify/${reference}`,
+      {
+        headers: { Authorization: `Bearer ${secretKey}` },
+      }
+    );
+
+    const { status, amount, customer } = response.data.data;
+
+    if (status !== "success") {
+      return res.status(400).json({
+        success: false,
+        message: "Payment verification failed",
+        status,
+      });
+    }
+
+    // Payment successful
+    console.log(`
+💰 PAYSTACK PAYMENT VERIFIED
+═══════════════════════════
+Reference: ${reference}
+Amount: KES ${amount / 100}
+Customer: ${customer.email}
+Order: ${orderId || "N/A"}
+Type: ${orderType || "GENERAL"}
+    `);
+
+    res.json({
+      success: true,
+      message: "Payment verified successfully",
+      transaction: {
+        reference,
+        amount: amount / 100,
+        status,
+        email: customer.email,
+      },
+    });
+  } catch (error) {
+    console.error("Paystack verification error:", error);
+
+    if (error.response?.status === 404) {
+      return res.status(404).json({
+        error: "Transaction not found",
+        message: "Invalid payment reference",
+      });
+    }
+
+    res.status(500).json({
+      error: "Payment verification failed",
+      message: error.message,
+    });
+  }
+});
+
 export default router;

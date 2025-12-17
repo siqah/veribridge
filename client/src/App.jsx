@@ -12,6 +12,8 @@ import CompanyFormation from './components/dashboard/CompanyFormation';
 import Invoicing from './components/dashboard/Invoicing';
 import Mailbox from './components/dashboard/Mailbox';
 import ApiKeys from './components/dashboard/ApiKeys';
+// Admin components
+import FormationOrders from './components/admin/FormationOrders';
 import { useAddressStore } from './store/addressStore';
 import { useTheme } from './utils/useTheme';
 import './App.css';
@@ -245,6 +247,18 @@ function App() {
         </div>
 
         <div className="flex items-center gap-3">
+            {/* Admin Link */}
+            <button
+              onClick={() => handleNavClick('admin-formations')}
+              className={`px-3 py-1.5 text-xs font-semibold rounded-md transition-colors ${
+                currentView === 'admin-formations'
+                  ? 'bg-purple-500/20 text-purple-400 border border-purple-500/30'
+                  : 'bg-gray-700/50 text-gray-400 hover:bg-gray-700 border border-gray-700'
+              }`}
+            >
+              Admin
+            </button>
+            
             <button
               onClick={toggleTheme}
               className="px-3 py-2 rounded-lg text-sm font-medium transition-all flex items-center gap-2"
@@ -511,6 +525,8 @@ function App() {
                 <Mailbox />
               ) : currentView === 'api' ? (
                 <ApiKeys />
+              ) : currentView === 'admin-formations' ? (
+                <FormationOrders />
               ) : null}
             </div>
             

@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { Building2, ChevronRight, CheckCircle, AlertCircle, Search, Loader, Shield, X, Check } from 'lucide-react';
 import axios from 'axios';
+import PaystackCheckout from '../PaystackCheckout';
 
 const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3001';
 
@@ -549,16 +550,53 @@ const CompanyFormation = () => {
               </label>
             </div>
 
-            <button
-              onClick={handleSubmit}
-              disabled={loading || !agreedToTerms}
-              className="btn-primary w-full text-lg py-4"
-            >
-              {loading ? 'Processing...' : `Pay KES ${formData.jurisdiction === 'UK' ? '20,000' : '25,000'} via M-PESA`}
-            </button>
+            {!orderId ? (
+              <PaystackCheckout
+                amount={formData.jurisdiction === 'UK' ? 20000 : 25000}
+                email={formData.directorEmail || kycStatus.email}
+                metadata={{
+                  orderType: 'COMPANY_FORMATION',
+                  companyName: formData.companyName,
+                  jurisdiction: formData.jurisdiction,
+                  directorName: formData.directorName
+                }}
+                onSuccess={async (reference) => {
+                  setLoading(true);
+                  try {
+                    // First, create the order
+                    const orderResponse = await handleSubmit();
+                    
+                    if (orderResponse?.order?.id) {
+                      // Then verify payment
+                      await axios.post(`${API_URL}/api/payments/paystack/verify`, {
+                        reference: reference.reference,
+                        orderId: orderResponse.order.id,
+                        orderType: 'COMPANY_FORMATION'
+                      });
+                      
+                      setOrderId(orderResponse.order.id);
+                      alert('✅ Payment successful! Order ID: ' + orderResponse.order.id);
+                    }
+                  } catch (error) {
+                    console.error('Payment verification error:', error);
+                    alert('Payment verification failed. Please contact support.');
+                  } finally {
+                    setLoading(false);
+                  }
+                }}
+                onClose={() => console.log('Payment cancelled')}
+                buttonText={`Pay KES ${formData.jurisdiction === 'UK' ? '20,000' : '25,000'}`}
+              />
+            ) : (
+              <div className="text-center p-6 rounded-lg" style={{ background: 'var(--bg-success)' }}>
+                <CheckCircle className="w-16 h-16 mx-auto mb-4" style={{ color: 'var(--success)' }} />
+                <h3 className="text-xl font-bold mb-2" style={{ color: 'var(--text-primary)' }}>Order Submitted!</h3>
+                <p style={{ color: 'var(--text-secondary)' }}>Order ID: {orderId}</p>
+              </div>
+            )}
 
             <p className="text-xs text-center mt-4" style={{ color: 'var(--text-muted)' }}>
-              🔒 We encrypt your data using AES-256
+              🔒 Secure payment powered by Paystack
             </p>
           </div>
         )}

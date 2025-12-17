@@ -21,7 +21,9 @@
         "jsonwebtoken": "^9.0.2",
         "axios": "^1.6.2",
         "qrcode": "^1.5.3",
-        "puppeteer": "^21.6.0"
+        "puppeteer": "^21.6.0",
+        "better-sqlite3": "^9.2.2",
+        "multer": "^1.4.5-lts.1"
     },
     "devDependencies": {
         "nodemon": "^3.0.2"

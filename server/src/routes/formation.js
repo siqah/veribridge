@@ -3,6 +3,8 @@ import { v4 as uuidv4 } from "uuid";
 import Database from "better-sqlite3";
 import { fileURLToPath } from "url";
 import { dirname, join } from "path";
+// import multer from "multer";
+// import { existsSync, mkdirSync } from "fs";
 import companiesHouseService from "../services/companiesHouse.js";
 import sanctionsService from "../services/sanctions.js";
 
@@ -13,6 +15,34 @@ const router = express.Router();
 
 // SQLite connection
 const db = new Database(join(__dirname, "../../veribridge.db"));
+
+// TODO: Configure multer for certificate uploads once package is installed
+// const uploadDir = join(__dirname, "../../uploads/certificates");
+// if (!existsSync(uploadDir)) {
+//   mkdirSync(uploadDir, { recursive: true });
+// }
+//
+// const storage = multer.diskStorage({
+//   destination: (req, file, cb) => {
+//     cb(null, uploadDir);
+//   },
+//   filename: (req, file, cb) => {
+//     const uniqueName = `${Date.now()}-${uuidv4()}.pdf`;
+//     cb(null, uniqueName);
+//   },
+// });
+//
+// const upload = multer({
+//   storage,
+//   fileFilter: (req, file, cb) => {
+//     if (file.mimetype === "application/pdf") {
+//       cb(null, true);
+//     } else {
+//       cb(new Error("Only PDF files are allowed"));
+//     }
+//   },
+//   limits: { fileSize: 10 * 1024 * 1024 }, // 10MB limit
+// });
 
 /**
  * GET /api/formation/uk-check-name
@@ -385,5 +415,66 @@ router.patch("/:id/status", async (req, res) => {
     res.status(500).json({ error: "Failed to update formation order" });
   }
 });
+
+/**
+ * POST /api/formation/:id/upload-certificate
+ * Upload incorporation certificate
+ * TODO: Enable once multer is installed
+ */
+router.post("/:id/upload-certificate", async (req, res) => {
+  // Temporary stub until multer is installed
+  res.status(501).json({
+    error:
+      "Certificate upload temporarily disabled. Admin can update certificate_url manually via status endpoint.",
+  });
+});
+
+// Uncomment once multer is installed:
+// router.post("/:id/upload-certificate", upload.single("certificate"), async (req, res) => {
+//   try {
+//     const { id } = req.params;
+//
+//     if (!req.file) {
+//       return res.status(400).json({ error: "No file uploaded" });
+//     }
+//
+//     const certificateUrl = `/uploads/certificates/${req.file.filename}`;
+//
+//     // Update formation with certificate URL
+//     const updateStmt = db.prepare(`
+//       UPDATE company_formations
+//       SET certificate_url = ?, updated_at = datetime('now')
+//       WHERE id = ?
+//     `);
+//
+//     const result = updateStmt.run(certificateUrl, id);
+//
+//     if (result.changes === 0) {
+//       return res.status(404).json({ error: "Formation order not found" });
+//     }
+//
+//     // Log audit
+//     const auditStmt = db.prepare(`
+//       INSERT INTO formation_audit_log (id, formation_id, action, details)
+//       VALUES (?, ?, ?, ?)
+//     `);
+//
+//     auditStmt.run(
+//       uuidv4(),
+//       id,
+//       "CERTIFICATE_UPLOADED",
+//       JSON.stringify({ filename: req.file.filename })
+//     );
+//
+//     res.json({
+//       success: true,
+//       message: "Certificate uploaded successfully",
+//       certificateUrl,
+//     });
+//   } catch (error) {
+//     console.error("Certificate upload error:", error);
+//     res.status(500).json({ error: "Failed to upload certificate" });
+//   }
+// });
 
 export default router;
