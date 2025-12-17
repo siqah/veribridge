@@ -1,12 +1,14 @@
 import { useState, useEffect } from 'react';
 import { Mail, MapPin, Calendar, Package as PackageIcon, X } from 'lucide-react';
 import { mailboxAPI } from '../../services/dashboardApi';
+import MailboxSubscription from './MailboxSubscription';
 
 const Mailbox = () => {
   const [mailItems, setMailItems] = useState([]);
   const [subscription, setSubscription] = useState(null);
   const [selectedItem, setSelectedItem] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [showSubscribe, setShowSubscribe] = useState(false);
   
   useEffect(() => {
     loadData();
@@ -50,6 +52,22 @@ const Mailbox = () => {
     }
   };
   
+ const handleSubscribe = (newSubscription) => {
+    setSubscription(newSubscription);
+    setShowSubscribe(false);
+    loadData(); // Reload data to show new mailbox
+  };
+  
+  // Show subscription flow if no subscription
+  if (showSubscribe || (!loading && !subscription)) {
+    return (
+      <MailboxSubscription 
+        onSubscribe={handleSubscribe}
+        onCancel={subscription ? () => setShowSubscribe(false) : null}
+      />
+    );
+  }
+  
   return (
     <div className="max-w-6xl mx-auto">
       {/* Header */}
@@ -58,7 +76,7 @@ const Mailbox = () => {
           <Mail className="w-8 h-8 text-blue-400" />
           <div>
             <h1 className="text-3xl font-bold text-white">Digital Mailbox</h1>
-            <p className="text-gray-400">Your permanent business address in Nairobi</p>
+            <p className="text-gray-400">Your permanent business address</p>
           </div>
         </div>
       </div>

@@ -4,6 +4,7 @@ import { useAddressStore } from '../store/addressStore';
 import { formatAddress, validateAddress } from '../utils/addressLogic';
 import { getCountriesSorted, getCountryByCode, getAllRegions } from '../data/countries';
 import PreflightChecker from './PreflightChecker';
+import AddressAnalysis from './AddressAnalysis';
 
 // OpenStreetMap Nominatim API endpoint
 const NOMINATIM_API = 'https://nominatim.openstreetmap.org/search';
@@ -352,6 +353,14 @@ export default function AddressBuilder() {
             <CopyButton text={formattedAddress} />
             <WhatsAppShareButton address={formattedAddress} />
           </div>
+          
+          {/* Kenya-Specific Analysis & Options */}
+          {countryName === 'Kenya' && (
+            <AddressAnalysis 
+              addressComponents={{ building, street, area, city, state, postalCode, countryName }}
+              formattedAddress={formattedAddress}
+            />
+          )}
           
           {/* Pre-Flight Verification */}
           <div className="mt-6 pt-6 border-t border-gray-700/50">

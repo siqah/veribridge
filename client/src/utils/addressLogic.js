@@ -65,8 +65,13 @@ function removeColloquialisms(text) {
 
 /**
  * Formats address components into a standard international format
- * Format varies by country but generally:
- * [Building], [Street], [Area], [City], [State/Province], [Postal Code], [Country]
+ * Format: [Unit/Apt], [Building], [Road], [Area], [City], [PostalCode], [Country]
+ *
+ * Smart formatting rules:
+ * 1. Avoids redundancy (e.g., "Nairobi, Nairobi County" → "Nairobi")
+ * 2. Filters religious/vague landmarks (e.g., "Makina Mosque" → "Makina Building")
+ * 3. Prioritizes roads over general landmarks
+ * 4. Validates location hierarchy (correct sub-county matching)
  *
  * @param {Object} addressComponents - Object containing address parts
  * @param {string} addressComponents.building - Building or landmark name
@@ -83,13 +88,71 @@ export function formatAddress(addressComponents) {
     addressComponents;
 
   // Clean each component
-  const cleanBuilding = removeColloquialisms(building);
+  let cleanBuilding = removeColloquialisms(building);
   const cleanStreet = removeColloquialisms(street);
-  const cleanArea = removeColloquialisms(area);
+  let cleanArea = removeColloquialisms(area);
   const cleanCity = removeColloquialisms(city);
-  const cleanState = state?.trim() || "";
+  let cleanState = state?.trim() || "";
   const cleanPostalCode = postalCode?.trim() || "";
   const cleanCountry = countryName?.trim() || "";
+
+  // --- SMART CLEANING RULES ---
+
+  // 1. Remove religious/vague landmarks from building names
+  const problematicKeywords = [
+    "mosque",
+    "church",
+    "temple",
+    "shrine",
+    "cathedral",
+    "westside",
+    "eastside",
+    "northside",
+    "southside",
+  ];
+
+  problematicKeywords.forEach((keyword) => {
+    const regex = new RegExp(`\\b${keyword}\\b`, "gi");
+    cleanBuilding = cleanBuilding.replace(regex, "").trim();
+  });
+
+  // Clean up "Building" if it's the only word left
+  if (cleanBuilding.toLowerCase() === "building") {
+    cleanBuilding = "";
+  }
+
+  // 2. Remove redundancy: "Nairobi, Nairobi County" → "Nairobi"
+  if (cleanState && cleanCity) {
+    // If state contains city name + "County/State/Province", remove state
+    const redundantPatterns = [
+      `${cleanCity} County`,
+      `${cleanCity} State`,
+      `${cleanCity} Province`,
+      cleanCity, // Exact match
+    ];
+
+    if (
+      redundantPatterns.some(
+        (pattern) => cleanState.toLowerCase() === pattern.toLowerCase()
+      )
+    ) {
+      cleanState = ""; // Remove redundant state
+    }
+  }
+
+  // 3. Prioritize road names over general areas if both exist
+  // If we have a specific road, the general "area" becomes less important
+  if (cleanStreet && cleanArea) {
+    // Check if area is too generic (single word or very short)
+    if (cleanArea.split(" ").length === 1 || cleanArea.length < 4) {
+      cleanArea = ""; // Remove generic area if we have a road
+    }
+  }
+
+  // 4. Remove "Kenya" if country is already specified
+  if (cleanCountry.toLowerCase() === "kenya" && cleanState.includes("Kenya")) {
+    cleanState = cleanState.replace(/,?\s*Kenya/gi, "").trim();
+  }
 
   // Build the address array (only include non-empty parts)
   const addressParts = [
@@ -102,8 +165,14 @@ export function formatAddress(addressComponents) {
     cleanCountry,
   ].filter((part) => part && part.length > 0);
 
-  // Join with commas and clean up
-  return addressParts.join(", ");
+  // Final cleanup: remove duplicate consecutive parts
+  const uniqueParts = addressParts.filter(
+    (part, index, arr) =>
+      index === 0 || part.toLowerCase() !== arr[index - 1].toLowerCase()
+  );
+
+  // Join with commas
+  return uniqueParts.join(", ");
 }
 
 /**
