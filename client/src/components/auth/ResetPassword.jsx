@@ -1,26 +1,36 @@
-import { useState } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { useState, useEffect } from 'react';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import { useAuth } from '../../contexts/AuthContext';
 
-export default function Signup() {
-  const [email, setEmail] = useState('');
+export default function ResetPassword() {
+  const [searchParams] = useSearchParams();
   const [password, setPassword] = useState('');
-  const [fullName, setFullName] = useState('');
+  const [confirmPassword, setConfirmPassword] = useState('');
   const [error, setError] = useState('');
   const [success, setSuccess] = useState(false);
   const [loading, setLoading] = useState(false);
-  const { signup } = useAuth();
+  const { updatePassword } = useAuth();
   const navigate = useNavigate();
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError('');
+
+    if (password !== confirmPassword) {
+      setError('Passwords do not match');
+      return;
+    }
+
+    if (password.length < 6) {
+      setError('Password must be at least 6 characters');
+      return;
+    }
+
     setLoading(true);
 
     try {
-      const result = await signup(email, password, fullName);
+      await updatePassword(password);
       setSuccess(true);
-      // Redirect to login after 2 seconds
       setTimeout(() => navigate('/login'), 2000);
     } catch (err) {
       setError(err.message);
@@ -39,10 +49,8 @@ export default function Signup() {
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
               </svg>
             </div>
-            <h2 className="text-2xl font-bold text-white mb-2">Check Your Email!</h2>
-            <p className="text-blue-200">
-              We've sent a verification link to <strong>{email}</strong>
-            </p>
+            <h2 className="text-2xl font-bold text-white mb-2">Password Reset!</h2>
+            <p className="text-blue-200">Your password has been updated successfully</p>
             <p className="text-white/70 text-sm mt-4">Redirecting to login...</p>
           </div>
         </div>
@@ -53,43 +61,27 @@ export default function Signup() {
   return (
     <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-slate-900 via-blue-900 to-slate-900 p-4">
       <div className="w-full max-w-md">
-        {/* Compact Card */}
         <div className="backdrop-blur-xl bg-white/10 border border-white/20 rounded-2xl shadow-2xl p-8">
-          {/* Logo & Title - Compact */}
           <div className="text-center mb-6">
-            <h1 className="text-3xl font-bold text-white mb-1">
-              Veri<span className="text-blue-400">Bridge</span>
-            </h1>
-            <p className="text-blue-200 text-sm">Create your account</p>
+            <h1 className="text-3xl font-bold text-white mb-1">New Password</h1>
+            <p className="text-blue-200 text-sm">Enter your new password</p>
           </div>
 
-          {/* Error Alert - Compact */}
           {error && (
             <div className="mb-4 p-3 bg-red-500/20 border border-red-500/50 rounded-lg text-red-200 text-sm">
               {error}
             </div>
           )}
 
-          {/* Form - Minimal Spacing */}
           <form onSubmit={handleSubmit} className="space-y-4">
             <div>
               <input
-                type="text"
-                value={fullName}
-                onChange={(e) => setFullName(e.target.value)}
-                placeholder="Full name"
+                type="password"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                placeholder="New password (min. 6 characters)"
                 required
-                className="w-full px-4 py-3 bg-white/10 border border-white/20 rounded-lg text-white placeholder-white/50 focus:outline-none focus:ring-2 focus:ring-blue-400 focus:border-transparent transition"
-              />
-            </div>
-
-            <div>
-              <input
-                type="email"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                placeholder="Email address"
-                required
+                minLength={6}
                 className="w-full px-4 py-3 bg-white/10 border border-white/20 rounded-lg text-white placeholder-white/50 focus:outline-none focus:ring-2 focus:ring-blue-400 focus:border-transparent transition"
               />
             </div>
@@ -97,9 +89,9 @@ export default function Signup() {
             <div>
               <input
                 type="password"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                placeholder="Password (min. 6 characters)"
+                value={confirmPassword}
+                onChange={(e) => setConfirmPassword(e.target.value)}
+                placeholder="Confirm new password"
                 required
                 minLength={6}
                 className="w-full px-4 py-3 bg-white/10 border border-white/20 rounded-lg text-white placeholder-white/50 focus:outline-none focus:ring-2 focus:ring-blue-400 focus:border-transparent transition"
@@ -111,28 +103,10 @@ export default function Signup() {
               disabled={loading}
               className="w-full py-3 bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 text-white font-semibold rounded-lg shadow-lg hover:shadow-xl transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
             >
-              {loading ? 'Creating account...' : 'Sign Up'}
+              {loading ? 'Updating...' : 'Update Password'}
             </button>
           </form>
-
-          {/* Link - Compact */}
-          <div className="mt-4 text-center">
-            <div className="text-sm text-white/70">
-              Already have an account?{' '}
-              <Link
-                to="/login"
-                className="text-blue-300 hover:text-blue-200 font-semibold transition"
-              >
-                Sign in
-              </Link>
-            </div>
-          </div>
         </div>
-
-        {/* Footer - Outside card */}
-        <p className="text-center text-white/50 text-xs mt-6">
-          Secure authentication powered by Supabase
-        </p>
       </div>
     </div>
   );

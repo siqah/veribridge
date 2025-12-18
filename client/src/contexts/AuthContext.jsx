@@ -1,113 +1,7 @@
 import { createContext, useContext, useState, useEffect } from 'react';
+import { supabase } from '../lib/supabase';
 
-const AuthContext = createContext();
-
-const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3001';
-
-export function AuthProvider({ children }) {
-  const [user, setUser] = useState(null);
-  const [token, setToken] = useState(localStorage.getItem('veribridge_token'));
-  const [loading, setLoading] = useState(true);
-
-  useEffect(() => {
-    if (token) {
-      // Fetch current user on mount
-      fetchCurrentUser();
-    } else {
-      setLoading(false);
-    }
-  }, []);
-
-  const fetchCurrentUser = async () => {
-    try {
-      const response = await fetch(`${API_URL}/api/auth/me`, {
-        headers: { 'Authorization': `Bearer ${token}` }
-      });
-
-      const data = await response.json();
-
-      if (data.success) {
-        setUser(data.user);
-      } else {
-        // Token invalid, clear it
-        logout();
-      }
-    } catch (error) {
-      console.error('Failed to fetch user:', error);
-      logout();
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const login = async (email, password) => {
-    try {
-      const response = await fetch(`${API_URL}/api/auth/login`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email, password })
-      });
-
-      const data = await response.json();
-
-      if (data.success) {
-        setToken(data.token);
-        setUser(data.user);
-        localStorage.setItem('veribridge_token', data.token);
-        return { success: true };
-      }
-
-      return { success: false, error: data.error };
-    } catch (error) {
-      return { success: false, error: 'Network error. Please try again.' };
-    }
-  };
-
-  const signup = async (email, password, fullName, phone) => {
-    try {
-      const response = await fetch(`${API_URL}/api/auth/signup`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email, password, fullName, phone })
-      });
-
-      const data = await response.json();
-
-      if (data.success) {
-        setToken(data.token);
-        setUser(data.user);
-        localStorage.setItem('veribridge_token', data.token);
-        return { success: true };
-      }
-
-      return { success: false, error: data.error };
-    } catch (error) {
-      return { success: false, error: 'Network error. Please try again.' };
-    }
-  };
-
-  const logout = () => {
-    setToken(null);
-    setUser(null);
-    localStorage.removeItem('veribridge_token');
-  };
-
-  const value = {
-    user,
-    token,
-    login,
-    signup,
-    logout,
-    loading,
-    isAuthenticated: !!user
-  };
-
-  return (
-    <AuthContext.Provider value={value}>
-      {children}
-    </AuthContext.Provider>
-  );
-}
+const AuthContext = createContext({});
 
 export const useAuth = () => {
   const context = useContext(AuthContext);
@@ -115,4 +9,135 @@ export const useAuth = () => {
     throw new Error('useAuth must be used within AuthProvider');
   }
   return context;
+};
+
+export const AuthProvider = ({ children }) => {
+  const [user, setUser] = useState(null);
+  const [session, setSession] = useState(null);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    // Get initial session
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      setSession(session);
+      setUser(session?.user || null);
+      setLoading(false);
+    });
+
+    // Listen for auth changes
+    const {
+      data: { subscription },
+    } = supabase.auth.onAuthStateChange((_event, session) => {
+      setSession(session);
+      setUser(session?.user || null);
+      setLoading(false);
+    });
+
+    return () => subscription.unsubscribe();
+  }, []);
+
+  const signup = async (email, password, fullName) => {
+    try {
+      const { data, error } = await supabase.auth.signUp({
+        email,
+        password,
+        options: {
+          data: {
+            full_name: fullName,
+          },
+          emailRedirectTo: `${window.location.origin}/verify-email`,
+        },
+      });
+
+      if (error) throw error;
+
+      return {
+        success: true,
+        message: 'Please check your email to verify your account',
+        user: data.user,
+      };
+    } catch (error) {
+      console.error('Signup error:', error);
+      throw new Error(error.message || 'Failed to create account');
+    }
+  };
+
+  const login = async (email, password) => {
+    try {
+      const { data, error } = await supabase.auth.signInWithPassword({
+        email,
+        password,
+      });
+
+      if (error) throw error;
+
+      return {
+        success: true,
+        user: data.user,
+        session: data.session,
+      };
+    } catch (error) {
+      console.error('Login error:', error);
+      throw new Error(error.message || 'Invalid email or password');
+    }
+  };
+
+  const logout = async () => {
+    try {
+      const { error } = await supabase.auth.signOut();
+      if (error) throw error;
+    } catch (error) {
+      console.error('Logout error:', error);
+      throw error;
+    }
+  };
+
+  const resetPassword = async (email) => {
+    try {
+      const { error } = await supabase.auth.resetPasswordForEmail(email, {
+        redirectTo: `${window.location.origin}/reset-password`,
+      });
+
+      if (error) throw error;
+
+      return {
+        success: true,
+        message: 'Check your email for the password reset link',
+      };
+    } catch (error) {
+      console.error('Password reset error:', error);
+      throw new Error(error.message || 'Failed to send reset email');
+    }
+  };
+
+  const updatePassword = async (newPassword) => {
+    try {
+      const { error} = await supabase.auth.updateUser({
+        password: newPassword,
+      });
+
+      if (error) throw error;
+
+      return {
+        success: true,
+        message: 'Password updated successfully',
+      };
+    } catch (error) {
+      console.error('Update password error:', error);
+      throw new Error(error.message || 'Failed to update password');
+    }
+  };
+
+  const value = {
+    user,
+    session,
+    loading,
+    signup,
+    login,
+    logout,
+    resetPassword,
+    updatePassword,
+  };
+
+  return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 };

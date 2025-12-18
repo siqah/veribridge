@@ -1,0 +1,327 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
+  // directUrl = env("DIRECT_URL")  // Temporarily disabled for db push
+}
+
+// ============================================
+// USER & AUTHENTICATION
+// ============================================
+
+model User {
+  id            String   @id @default(uuid())
+  email         String   @unique
+  passwordHash  String   @map("password_hash")
+  fullName      String?  @map("full_name")
+  idNumber      String?  @map("id_number") // National ID
+  phoneNumber   String?  @map("phone_number") // For M-PESA
+  isVerified    Boolean  @default(false) @map("is_verified")
+  emailVerified Boolean  @default(false) @map("email_verified")
+  lastLogin     DateTime? @map("last_login")
+  createdAt     DateTime @default(now()) @map("created_at")
+  updatedAt     DateTime @updatedAt @map("updated_at")
+
+  // Relations
+  addresses            Address[]
+  companyOrders        CompanyOrder[]
+  invoices             Invoice[]
+  apiKeys              ApiKey[]
+  emailVerifications   EmailVerification[]
+  passwordResets       PasswordReset[]
+  mailboxSubscriptions MailboxSubscription[]
+
+  @@index([email])
+  @@map("users")
+}
+
+// ============================================
+// ADDRESS ARCHITECT
+// ============================================
+
+model Address {
+  id              String   @id @default(uuid())
+  userId          String   @map("user_id")
+  formattedString String   @map("formatted_string") // The final "Western" string
+  metadata        Json     // { plot: "45", road: "Biashara St", estate: "Kibra", country: "KE" }
+  isPrimary       Boolean  @default(false) @map("is_primary")
+  createdAt       DateTime @default(now()) @map("created_at")
+  updatedAt       DateTime @updatedAt @map("updated_at")
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@map("addresses")
+}
+
+// ============================================
+// COMPANY FORMATION
+// ============================================
+
+model CompanyOrder {
+  id                String    @id @default(uuid())
+  userId            String?   @map("user_id")
+  companyName       String    @map("company_name")
+  altName1          String?   @map("alt_name_1") // Alternative name option 1
+  altName2          String?   @map("alt_name_2") // Alternative name option 2
+  jurisdiction      String    // 'UK' | 'US' | 'KE'
+  companyType       String    @map("company_type") // 'LTD' | 'LLC' | 'LIMITED'
+  industryCode      String?   @map("industry_code") // SIC code or industry
+  
+  // Director Information
+  directorName      String?   @map("director_name")
+  directorAddress   String?   @map("director_address")
+  directorEmail     String?   @map("director_email")
+  directorPhone     String?   @map("director_phone")
+  
+  // Compliance & Verification
+  sanctionsChecked  Boolean   @default(false) @map("sanctions_checked")
+  sanctionsResult   Json?     @map("sanctions_result") // Result from screening
+  kycVerified       Boolean   @default(false) @map("kyc_verified")
+  
+  // Payment
+  paymentAmount     Int?      @map("payment_amount") // Amount in smallest currency unit
+  paymentRef        String?   @map("payment_ref") // Paystack/MPESA reference
+  currency          String    @default("KES")
+  
+  // Status & Processing
+  status            String    @default("PENDING") // 'DRAFT', 'PENDING', 'PAID', 'PROCESSING', 'COMPLETED', 'REJECTED'
+  adminNotes        String?   @map("admin_notes")
+  
+  // Registration Details
+  registrationNumber String? @map("registration_number") // Company number once registered  
+  certificateUrl    String?   @map("certificate_url") // URL to PDF in Storage
+  
+  // Legacy JSON fields (for backward compatibility)
+  directorData      Json?     @map("director_data") // Director information
+  addressData       Json?     @map("address_data") // Company address
+  shareData         Json?     @map("share_data") // Share structure
+  
+  // Timestamps
+  createdAt         DateTime  @default(now()) @map("created_at")
+  updatedAt         DateTime  @updatedAt @map("updated_at")
+  completedAt       DateTime? @map("completed_at")
+
+  user User? @relation(fields: [userId], references: [id], onDelete: SetNull)
+
+  @@index([userId])
+  @@index([status])
+  @@index([jurisdiction])
+  @@map("company_orders")
+}
+
+// ============================================
+// INVOICING SYSTEM
+// ============================================
+
+model Invoice {
+  id             String    @id @default(uuid())
+  userId         String    @map("user_id")
+  invoiceNumber  String    @unique @map("invoice_number") // INV-2024-001
+  clientName     String    @map("client_name")
+  clientEmail    String?   @map("client_email")
+  clientAddress  String?   @map("client_address")
+  items          Json      // Array of { description, quantity, rate, amount }
+  subtotal       Int       // Amount before tax
+  taxRate        Int       @default(16) @map("tax_rate") // KRA VAT 16%
+  taxAmount      Int       @map("tax_amount")
+  total          Int       // Final amount
+  currency       String    @default("KES")
+  status         String    @default("DRAFT") // 'DRAFT', 'SENT', 'PAID', 'OVERDUE', 'CANCELLED'
+  dueDate        DateTime? @map("due_date")
+  paidAt         DateTime? @map("paid_at")
+  notes          String?   // Additional notes
+  pdfUrl         String?   @map("pdf_url") // Generated PDF URL
+  createdAt      DateTime  @default(now()) @map("created_at")
+  updatedAt      DateTime  @updatedAt @map("updated_at")
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([status])
+  @@index([invoiceNumber])
+  @@map("invoices")
+}
+
+// ============================================
+// DIGITAL MAILBOX
+// ============================================
+
+model MailboxSubscription {
+  id          String    @id @default(uuid())
+  userId      String?   @map("user_id")
+  email       String
+  plan        String    @default("basic") // 'basic', 'professional'
+  address     String    // Virtual address assigned
+  status      String    @default("active") // 'active', 'cancelled', 'expired'
+  startDate   DateTime  @default(now()) @map("start_date")
+  endDate     DateTime? @map("end_date")
+  autoRenew   Boolean   @default(true) @map("auto_renew")
+  amount      Int       // Monthly fee
+  currency    String    @default("KES")
+  createdAt   DateTime  @default(now()) @map("created_at")
+  updatedAt   DateTime  @updatedAt @map("updated_at")
+
+  user User? @relation(fields: [userId], references: [id], onDelete: SetNull)
+
+  @@index([userId])
+  @@index([email])
+  @@index([status])
+  @@map("mailbox_subscriptions")
+}
+
+// ============================================
+// B2B API ACCESS
+// ============================================
+
+model ApiKey {
+  id          String    @id @default(uuid())
+  userId      String    @map("user_id")
+  key         String    @unique // The actual API key (hashed in production)
+  name        String    // User-friendly name for the key
+  isActive    Boolean   @default(true) @map("is_active")
+  usageCount  Int       @default(0) @map("usage_count")
+  lastUsedAt  DateTime? @map("last_used_at")
+  expiresAt   DateTime? @map("expires_at")
+  createdAt   DateTime  @default(now()) @map("created_at")
+  updatedAt   DateTime  @updatedAt @map("updated_at")
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([key])
+  @@map("api_keys")
+}
+
+// ============================================
+// EMAIL VERIFICATION
+// ============================================
+
+model EmailVerification {
+  id        String   @id @default(uuid())
+  userId    String   @map("user_id")
+  token     String   @unique
+  expiresAt DateTime @map("expires_at")
+  createdAt DateTime @default(now()) @map("created_at")
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([token])
+  @@map("email_verifications")
+}
+
+// ============================================
+// PASSWORD RESET
+// ============================================
+
+model PasswordReset {
+  id        String   @id @default(uuid())
+  userId    String   @map("user_id")
+  token     String   @unique
+  expiresAt DateTime @map("expires_at")
+  used      Boolean  @default(false)
+  createdAt DateTime @default(now()) @map("created_at")
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([token])
+  @@map("password_resets")
+}
+
+// ============================================
+// COMPANY FORMATION - ADDITIONAL MODELS
+// ============================================
+
+model UkNameSearch {
+  id          String   @id @default(uuid())
+  searchQuery String   @map("search_query")
+  isAvailable Boolean  @map("is_available")
+  suggestions Json?    // Array of alternative names
+  searchedAt  DateTime @default(now()) @map("searched_at")
+  expiresAt   DateTime @map("expires_at")
+
+  @@index([searchQuery])
+  @@map("uk_name_searches")
+}
+
+model FormationAuditLog {
+  id          String   @id @default(uuid())
+  formationId String   @map("formation_id")
+  action      String   // 'ORDER_CREATED', 'STATUS_UPDATED', 'CERTIFICATE_UPLOADED', etc.
+  details     Json?    // Additional context
+  createdAt   DateTime @default(now()) @map("created_at")
+
+  @@index([formationId])
+  @@map("formation_audit_logs")
+}
+
+// ============================================
+// DIGITAL MAILBOX - ADDITIONAL MODELS
+// ============================================
+
+model VirtualAddress {
+  id             String   @id @default(uuid())
+  addressLine1   String   @map("address_line_1")
+  addressLine2   String?  @map("address_line_2")
+  city           String
+  postalCode     String   @map("postal_code")
+  country        String   @default("Kenya")
+  location       String   // 'NAIROBI', 'MOMBASA', 'WESTLANDS', etc.
+  isAvailable    Boolean  @default(true) @map("is_available")
+  assignedToUser String?  @map("assigned_to_user")
+  createdAt      DateTime @default(now()) @map("created_at")
+  
+  @@index([location, isAvailable])
+  @@map("virtual_addresses")
+}
+
+model MailItem {
+  id           String    @id @default(uuid())
+  mailboxId    String    @map("mailbox_id")
+  sender       String?
+  mailType     String    @default("LETTER") @map("mail_type") // 'LETTER', 'PACKAGE', 'PARCEL'
+  subject      String?
+  receivedDate DateTime  @default(now()) @map("received_date")
+  scanUrl      String?   @map("scan_url")        // URL to scanned document
+  thumbnailUrl String?   @map("thumbnail_url")   // Thumbnail preview
+  weightGrams  Int?      @map("weight_grams")
+  status       String    @default("RECEIVED")    // 'RECEIVED', 'FORWARDED', 'DISPOSED'
+  isRead       Boolean   @default(false) @map("is_read")
+  createdAt    DateTime  @default(now()) @map("created_at")
+  
+  forwardingRequests ForwardingRequest[]
+  
+  @@index([mailboxId])
+  @@index([status])
+  @@map("mail_items")
+}
+
+model ForwardingRequest {
+  id                 String   @id @default(uuid())
+  mailItemId         String   @map("mail_item_id")
+  userId             String   @map("user_id")
+  destinationAddress String   @map("destination_address")
+  destinationCity    String   @map("destination_city")
+  destinationCountry String   @map("destination_country")
+  shippingMethod     String   @default("STANDARD") @map("shipping_method") // 'STANDARD', 'EXPRESS', 'PRIORITY'
+  forwardingCost     Int      @map("forwarding_cost")    // Cost in smallest currency unit
+  status             String   @default("PENDING")        // 'PENDING', 'SHIPPED', 'DELIVERED'
+  trackingNumber     String?  @map("tracking_number")
+  createdAt          DateTime @default(now()) @map("created_at")
+  shippedAt          DateTime? @map("shipped_at")
+  
+  mailItem MailItem @relation(fields: [mailItemId], references: [id], onDelete: Cascade)
+  
+  @@index([mailItemId])
+  @@index([userId])
+  @@index([status])
+  @@map("forwarding_requests")
+}

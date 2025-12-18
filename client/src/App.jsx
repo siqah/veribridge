@@ -18,6 +18,9 @@ import FormationOrders from './components/admin/FormationOrders';
 // Auth components
 import Login from './components/auth/Login';
 import Signup from './components/auth/Signup';
+import VerifyEmail from './components/auth/VerifyEmail';
+import ForgotPassword from './components/auth/ForgotPassword';
+import ResetPassword from './components/auth/ResetPassword';
 // Legal components
 import TermsOfService from './components/legal/TermsOfService';
 import PrivacyPolicy from './components/legal/PrivacyPolicy';
@@ -31,7 +34,10 @@ function App() {
   const [sidebarOpen, setSidebarOpen] = useState(false); // Mobile sidebar ONLY
   const { theme, toggleTheme } = useTheme();
   const { formattedAddress, validation } = useAddressStore();
-  const { user, logout, isAuthenticated } = useAuth();
+  const { user, logout } = useAuth();
+  
+  // Check if user is authenticated
+  const isAuthenticated = !!user;
   
   // Determine step completion status
   const isStep1Complete = formattedAddress && validation?.severity === 'success';
@@ -150,6 +156,19 @@ function App() {
   };
 
   const currentNavItem = navItems.find(item => item.id === currentView);
+
+  // Auth pages should render fullscreen without app layout
+  if (['login', 'signup', 'verify-email', 'forgot-password', 'reset-password'].includes(currentView)) {
+    return (
+      <>
+        {currentView === 'login' && <Login />}
+        {currentView === 'signup' && <Signup />}
+        {currentView === 'verify-email' && <VerifyEmail />}
+        {currentView === 'forgot-password' && <ForgotPassword />}
+        {currentView === 'reset-password' && <ResetPassword />}
+      </>
+    );
+  }
 
   // Group items by category for sidebar rendering
   const verificationItems = navItems.filter(item => item.category === 'verification');
@@ -560,15 +579,15 @@ function App() {
                   <OCRValidator />
                 </div>
               ) : currentView === 'login' ? (
-                <Login 
-                  onSuccess={() => setCurrentView('home')}
-                  onSwitchToSignup={() => setCurrentView('signup')}
-                />
+                <Login />
               ) : currentView === 'signup' ? (
-                <Signup 
-                  onSuccess={() => setCurrentView('home')}
-                  onSwitchToLogin={() => setCurrentView('login')}
-                />
+                <Signup />
+              ) : currentView === 'verify-email' ? (
+                <VerifyEmail />
+              ) : currentView === 'forgot-password' ? (
+                <ForgotPassword />
+              ) : currentView === 'reset-password' ? (
+                <ResetPassword />
               ) : currentView === 'terms' ? (
                 <TermsOfService />
               ) : currentView === 'privacy' ? (

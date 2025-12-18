@@ -1,48 +1,10 @@
 import express from "express";
-import { v4 as uuidv4 } from "uuid";
-import Database from "better-sqlite3";
-import { fileURLToPath } from "url";
-import { dirname, join } from "path";
-// import multer from "multer";
-// import { existsSync, mkdirSync } from "fs";
+import prisma from "../db/prisma.js";
 import companiesHouseService from "../services/companiesHouse.js";
 import sanctionsService from "../services/sanctions.js";
-
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = dirname(__filename);
+import { authenticateToken } from "./auth.js";
 
 const router = express.Router();
-
-// SQLite connection
-const db = new Database(join(__dirname, "../../veribridge.db"));
-
-// TODO: Configure multer for certificate uploads once package is installed
-// const uploadDir = join(__dirname, "../../uploads/certificates");
-// if (!existsSync(uploadDir)) {
-//   mkdirSync(uploadDir, { recursive: true });
-// }
-//
-// const storage = multer.diskStorage({
-//   destination: (req, file, cb) => {
-//     cb(null, uploadDir);
-//   },
-//   filename: (req, file, cb) => {
-//     const uniqueName = `${Date.now()}-${uuidv4()}.pdf`;
-//     cb(null, uniqueName);
-//   },
-// });
-//
-// const upload = multer({
-//   storage,
-//   fileFilter: (req, file, cb) => {
-//     if (file.mimetype === "application/pdf") {
-//       cb(null, true);
-//     } else {
-//       cb(new Error("Only PDF files are allowed"));
-//     }
-//   },
-//   limits: { fileSize: 10 * 1024 * 1024 }, // 10MB limit
-// });
 
 /**
  * GET /api/formation/uk-check-name
@@ -61,20 +23,22 @@ router.get("/uk-check-name", async (req, res) => {
     const normalizedQuery = query.trim().toUpperCase();
 
     // Check cache first
-    const cacheStmt = db.prepare(`
-      SELECT is_available, suggestions 
-      FROM uk_name_searches 
-      WHERE search_query = ? AND datetime(expires_at) > datetime('now')
-      ORDER BY searched_at DESC
-      LIMIT 1
-    `);
-
-    const cached = cacheStmt.get(normalizedQuery);
+    const cached = await prisma.ukNameSearch.findFirst({
+      where: {
+        searchQuery: normalizedQuery,
+        expiresAt: {
+          gt: new Date(), // Not expired
+        },
+      },
+      orderBy: {
+        searchedAt: "desc",
+      },
+    });
 
     if (cached) {
       return res.json({
-        available: Boolean(cached.is_available),
-        suggestions: cached.suggestions ? JSON.parse(cached.suggestions) : [],
+        available: cached.isAvailable,
+        suggestions: cached.suggestions || [],
         cached: true,
       });
     }
@@ -83,17 +47,17 @@ router.get("/uk-check-name", async (req, res) => {
     const result = await companiesHouseService.checkNameAvailability(query);
 
     // Cache the result (expires in 24 hours)
-    const insertStmt = db.prepare(`
-      INSERT INTO uk_name_searches (id, search_query, is_available, suggestions, expires_at)
-      VALUES (?, ?, ?, ?, datetime('now', '+24 hours'))
-    `);
+    const expiresAt = new Date();
+    expiresAt.setHours(expiresAt.getHours() + 24);
 
-    insertStmt.run(
-      uuidv4(),
-      normalizedQuery,
-      result.available ? 1 : 0,
-      JSON.stringify(result.suggestions || [])
-    );
+    await prisma.ukNameSearch.create({
+      data: {
+        searchQuery: normalizedQuery,
+        isAvailable: result.available,
+        suggestions: result.suggestions || [],
+        expiresAt,
+      },
+    });
 
     res.json({
       available: result.available,
@@ -113,9 +77,13 @@ router.get("/uk-check-name", async (req, res) => {
 /**
  * POST /api/formation
  * Create a new company formation order
+ * Requires authentication
  */
-router.post("/", async (req, res) => {
+router.post("/", authenticateToken, async (req, res) => {
   try {
+    // Get userId from authenticated token (required)
+    const userId = req.user.userId;
+
     const {
       companyName,
       altName1,
@@ -127,7 +95,6 @@ router.post("/", async (req, res) => {
       directorAddress,
       directorEmail,
       directorPhone,
-      userId,
     } = req.body;
 
     // Validation
@@ -168,57 +135,42 @@ router.post("/", async (req, res) => {
     // Calculate payment amount
     const paymentAmount = jurisdiction === "UK" ? 20000 : 25000;
 
-    const formationId = uuidv4();
-
-    // Insert formation order
-    const insertStmt = db.prepare(`
-      INSERT INTO company_formations (
-        id, user_id, company_name, alt_name_1, alt_name_2,
-        jurisdiction, company_type, industry_code,
-        director_name, director_address, director_email, director_phone,
-        payment_amount, sanctions_checked, sanctions_result, kyc_verified,
-        status
-      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-    `);
-
-    insertStmt.run(
-      formationId,
-      userId || null,
-      companyName,
-      altName1 || null,
-      altName2 || null,
-      jurisdiction,
-      companyType,
-      industryCode || null,
-      directorName,
-      directorAddress,
-      directorEmail || null,
-      directorPhone || null,
-      paymentAmount,
-      1,
-      JSON.stringify(sanctionsResult),
-      userId ? 1 : 0,
-      "PENDING"
-    );
+    // Create formation order
+    const formation = await prisma.companyOrder.create({
+      data: {
+        userId,
+        companyName,
+        altName1: altName1 || null,
+        altName2: altName2 || null,
+        jurisdiction,
+        companyType,
+        industryCode: industryCode || null,
+        directorName,
+        directorAddress,
+        directorEmail: directorEmail || null,
+        directorPhone: directorPhone || null,
+        paymentAmount,
+        sanctionsChecked: true,
+        sanctionsResult,
+        kycVerified: true, // Always verified since user is authenticated
+        status: "PENDING",
+      },
+    });
 
     // Log audit trail
-    const auditStmt = db.prepare(`
-      INSERT INTO formation_audit_log (id, formation_id, action, details)
-      VALUES (?, ?, ?, ?)
-    `);
-
-    auditStmt.run(
-      uuidv4(),
-      formationId,
-      "ORDER_CREATED",
-      JSON.stringify({ companyName, jurisdiction, directorName })
-    );
+    await prisma.formationAuditLog.create({
+      data: {
+        formationId: formation.id,
+        action: "ORDER_CREATED",
+        details: { companyName, jurisdiction, directorName },
+      },
+    });
 
     // Admin notification
     console.log(`
 🏢 NEW COMPANY FORMATION ORDER
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-Order ID: ${formationId}
+Order ID: ${formation.id}
 Company: ${companyName}
 Type: ${jurisdiction} ${companyType}
 Director: ${directorName}
@@ -227,21 +179,17 @@ Status: PENDING PAYMENT
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
     `);
 
-    const formation = db
-      .prepare("SELECT * FROM company_formations WHERE id = ?")
-      .get(formationId);
-
     res.status(201).json({
       success: true,
       message: "Company formation order created successfully",
       order: {
         id: formation.id,
-        companyName: formation.company_name,
+        companyName: formation.companyName,
         jurisdiction: formation.jurisdiction,
-        companyType: formation.company_type,
+        companyType: formation.companyType,
         status: formation.status,
-        paymentAmount: formation.payment_amount,
-        createdAt: formation.created_at,
+        paymentAmount: formation.paymentAmount,
+        createdAt: formation.createdAt,
       },
     });
   } catch (error) {
@@ -261,8 +209,9 @@ router.get("/:id", async (req, res) => {
   try {
     const { id } = req.params;
 
-    const stmt = db.prepare("SELECT * FROM company_formations WHERE id = ?");
-    const formation = stmt.get(id);
+    const formation = await prisma.companyOrder.findUnique({
+      where: { id },
+    });
 
     if (!formation) {
       return res.status(404).json({ error: "Formation order not found" });
@@ -286,23 +235,23 @@ router.get("/", async (req, res) => {
   try {
     const { status, userId } = req.query;
 
-    let query = "SELECT * FROM company_formations WHERE 1=1";
-    const params = [];
+    const where = {};
 
     if (status) {
-      query += " AND status = ?";
-      params.push(status);
+      where.status = status;
     }
 
     if (userId) {
-      query += " AND user_id = ?";
-      params.push(userId);
+      where.userId = userId;
     }
 
-    query += " ORDER BY created_at DESC LIMIT 100";
-
-    const stmt = db.prepare(query);
-    const formations = stmt.all(...params);
+    const formations = await prisma.companyOrder.findMany({
+      where,
+      orderBy: {
+        createdAt: "desc",
+      },
+      take: 100,
+    });
 
     res.json({
       success: true,
@@ -339,71 +288,47 @@ router.patch("/:id/status", async (req, res) => {
       });
     }
 
-    // Build update query
-    const updates = [];
-    const params = [];
+    // Build update data
+    const updateData = {};
 
     if (status) {
-      updates.push("status = ?");
-      params.push(status);
+      updateData.status = status;
     }
 
     if (adminNotes) {
-      updates.push("admin_notes = ?");
-      params.push(adminNotes);
+      updateData.adminNotes = adminNotes;
     }
 
     if (registrationNumber) {
-      updates.push("registration_number = ?");
-      params.push(registrationNumber);
+      updateData.registrationNumber = registrationNumber;
     }
 
     if (certificateUrl) {
-      updates.push("certificate_url = ?");
-      params.push(certificateUrl);
+      updateData.certificateUrl = certificateUrl;
     }
 
     if (status === "COMPLETED") {
-      updates.push("completed_at = datetime('now')");
+      updateData.completedAt = new Date();
     }
 
-    updates.push("updated_at = datetime('now')");
-
-    if (updates.length === 1) {
-      // Only updated_at
+    if (Object.keys(updateData).length === 0) {
       return res.status(400).json({ error: "No updates provided" });
     }
 
-    params.push(id);
-
-    const updateStmt = db.prepare(`
-      UPDATE company_formations 
-      SET ${updates.join(", ")}
-      WHERE id = ?
-    `);
-
-    const result = updateStmt.run(...params);
-
-    if (result.changes === 0) {
-      return res.status(404).json({ error: "Formation order not found" });
-    }
+    // Update formation
+    const formation = await prisma.companyOrder.update({
+      where: { id },
+      data: updateData,
+    });
 
     // Log audit
-    const auditStmt = db.prepare(`
-      INSERT INTO formation_audit_log (id, formation_id, action, details)
-      VALUES (?, ?, ?, ?)
-    `);
-
-    auditStmt.run(
-      uuidv4(),
-      id,
-      "STATUS_UPDATED",
-      JSON.stringify({ status, adminNotes })
-    );
-
-    const formation = db
-      .prepare("SELECT * FROM company_formations WHERE id = ?")
-      .get(id);
+    await prisma.formationAuditLog.create({
+      data: {
+        formationId: id,
+        action: "STATUS_UPDATED",
+        details: { status, adminNotes },
+      },
+    });
 
     res.json({
       success: true,
@@ -411,6 +336,10 @@ router.patch("/:id/status", async (req, res) => {
       order: formation,
     });
   } catch (error) {
+    if (error.code === "P2025") {
+      // Prisma "Record not found" error
+      return res.status(404).json({ error: "Formation order not found" });
+    }
     console.error("Update formation error:", error);
     res.status(500).json({ error: "Failed to update formation order" });
   }
@@ -428,53 +357,5 @@ router.post("/:id/upload-certificate", async (req, res) => {
       "Certificate upload temporarily disabled. Admin can update certificate_url manually via status endpoint.",
   });
 });
-
-// Uncomment once multer is installed:
-// router.post("/:id/upload-certificate", upload.single("certificate"), async (req, res) => {
-//   try {
-//     const { id } = req.params;
-//
-//     if (!req.file) {
-//       return res.status(400).json({ error: "No file uploaded" });
-//     }
-//
-//     const certificateUrl = `/uploads/certificates/${req.file.filename}`;
-//
-//     // Update formation with certificate URL
-//     const updateStmt = db.prepare(`
-//       UPDATE company_formations
-//       SET certificate_url = ?, updated_at = datetime('now')
-//       WHERE id = ?
-//     `);
-//
-//     const result = updateStmt.run(certificateUrl, id);
-//
-//     if (result.changes === 0) {
-//       return res.status(404).json({ error: "Formation order not found" });
-//     }
-//
-//     // Log audit
-//     const auditStmt = db.prepare(`
-//       INSERT INTO formation_audit_log (id, formation_id, action, details)
-//       VALUES (?, ?, ?, ?)
-//     `);
-//
-//     auditStmt.run(
-//       uuidv4(),
-//       id,
-//       "CERTIFICATE_UPLOADED",
-//       JSON.stringify({ filename: req.file.filename })
-//     );
-//
-//     res.json({
-//       success: true,
-//       message: "Certificate uploaded successfully",
-//       certificateUrl,
-//     });
-//   } catch (error) {
-//     console.error("Certificate upload error:", error);
-//     res.status(500).json({ error: "Failed to upload certificate" });
-//   }
-// });
 
 export default router;
