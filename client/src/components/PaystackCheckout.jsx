@@ -26,14 +26,15 @@ export default function PaystackCheckout({ amount, email, metadata, onSuccess, o
   const handlePayment = () => {
     initializePayment({
       onSuccess: (reference) => {
-        console.log('Payment successful:', reference);
-        onSuccess?.(reference);
-      },
-      onClose: () => {
-        console.log('Payment popup closed');
-        onClose?.();
+      if (onSuccess) {
+        onSuccess(reference);
       }
-    });
+    },
+    onClose: () => {
+      if (onClose) {
+        onClose();
+      }
+    },});
   };
 
   return (

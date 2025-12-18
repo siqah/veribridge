@@ -1,5 +1,5 @@
 import { useEffect, useState, useCallback, useRef } from 'react';
-import { MapPin, AlertCircle, CheckCircle2, Search, Copy, Share2, Check, Globe, Shield } from 'lucide-react';
+import { MapPin, AlertCircle, CheckCircle2, Search, Copy, Share2, Check, Globe, Shield, Home } from 'lucide-react';
 import { useAddressStore } from '../../store/addressStore';
 import { formatAddress, validateAddress } from '../../utils/addressLogic';
 import { getCountriesSorted, getCountryByCode, getAllRegions } from '../../data/countries';
@@ -316,18 +316,19 @@ export default function AddressBuilder() {
       
       {/* Formatted Address Preview */}
       {formattedAddress && (
-        <div className="mt-6 pt-6 border-t border-gray-700/50">
-          <div className="flex items-center justify-between mb-3">
-            <h3 className="text-sm font-semibold text-gray-300">Formatted Address</h3>
-            {validation && (
-              <span className={`text-xs font-medium px-2 py-1 rounded-full ${
-                validation.severity === 'error' ? 'bg-red-500/20 text-red-400' :
-                validation.severity === 'warning' ? 'bg-yellow-500/20 text-yellow-400' :
-                'bg-green-500/20 text-green-400'
-              }`}>
-                {validation.severity === 'success' ? 'Valid' : validation.severity.toUpperCase()}
-              </span>
-            )}
+        <div className="mt-6">
+          <div className="flex items-center gap-2 mb-3">
+            <Home className="w-5 h-5 text-blue-400" />
+            <h3 className="text-sm font-semibold" style={{ color: 'var(--text-primary)' }}>Formatted Address</h3>
+            <span className={`ml-auto text-xs font-semibold uppercase px-2 py-0.5 rounded ${
+              validation?.severity === 'error' ? 'bg-red-500/20 text-red-400' :
+              validation?.severity === 'warning' ? 'bg-yellow-500/20 text-yellow-400' :
+              'bg-green-500/20 text-green-400'
+            }`}>
+              {validation?.severity === 'error' ? 'Invalid' :
+               validation?.severity === 'warning' ? 'Warning' :
+               'Valid'}
+            </span>
           </div>
           
           <div className={`address-preview ${
@@ -335,7 +336,7 @@ export default function AddressBuilder() {
             validation?.severity === 'warning' ? 'address-preview-warning' :
             'address-preview-success'
           }`}>
-            <p className="text-white mb-3">{formattedAddress}</p>
+            <p className="mb-3" style={{ color: 'var(--text-primary)' }}>{formattedAddress}</p>
             
             <div className={`flex items-start gap-2 text-sm ${
               validation?.severity === 'error' ? 'text-red-400' :
@@ -350,7 +351,7 @@ export default function AddressBuilder() {
           
           {/* Action Buttons */}
           <div className="flex flex-wrap gap-3 mt-4">
-            <CopyButton text={formattedAddress} />
+            <CopyAddressButton address={formattedAddress} />
             <WhatsAppShareButton address={formattedAddress} />
           </div>
           
@@ -363,10 +364,10 @@ export default function AddressBuilder() {
           )}
           
           {/* Pre-Flight Verification */}
-          <div className="mt-6 pt-6 border-t border-gray-700/50">
+          <div className="mt-6 pt-6 border-t" style={{ borderColor: 'var(--border-color)' }}>
             <div className="flex items-center gap-2 mb-4">
               <Shield className="w-5 h-5 text-blue-400" />
-              <h3 className="text-sm font-semibold text-gray-300">Pre-Flight Verification</h3>
+              <h3 className="text-sm font-semibold" style={{ color: 'var(--text-primary)' }}>Pre-Flight Verification</h3>
             </div>
             <PreflightChecker />
           </div>
@@ -376,29 +377,25 @@ export default function AddressBuilder() {
   );
 }
 
-// Copy to Clipboard Button Component
-function CopyButton({ text }) {
+// Copy Address Button Component
+function CopyAddressButton({ address }) {
   const [copied, setCopied] = useState(false);
   
-  const handleCopy = async () => {
-    try {
-      await navigator.clipboard.writeText(text);
-      setCopied(true);
-      setTimeout(() => setCopied(false), 2000);
-    } catch (err) {
-      console.error('Failed to copy:', err);
-    }
+  const handleCopy = () => {
+    if (!address) return;
+    
+    navigator.clipboard.writeText(address)
+      .then(() => {
+        setCopied(true);
+        setTimeout(() => setCopied(false), 2000);
+      })
+      .catch(err => console.error('Failed to copy:', err));
   };
   
   return (
     <button
       onClick={handleCopy}
-      className="flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-all"
-      style={{ 
-        background: copied ? 'rgba(16, 185, 129, 0.2)' : 'var(--bg-secondary)',
-        border: `1px solid ${copied ? 'rgba(16, 185, 129, 0.5)' : 'var(--border-color)'}`,
-        color: copied ? '#10b981' : '#fff'
-      }}
+      className="px-4 py-2 rounded-lg font-medium transition-all flex items-center gap-2 bg-blue-600 hover:bg-blue-700 active:scale-95 text-white"
     >
       {copied ? (
         <>

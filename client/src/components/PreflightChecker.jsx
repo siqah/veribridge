@@ -33,7 +33,7 @@ export default function PreflightChecker() {
     return (
       <div className="p-4 rounded-lg border border-dashed border-gray-600 text-center">
         <Shield className="w-8 h-8 text-gray-500 mx-auto mb-2" />
-        <p className="text-gray-400 text-sm">
+        <p className="text-sm" style={{ color: 'var(--text-secondary)' }}>
           Enter an address above to run pre-flight verification
         </p>
       </div>
@@ -44,7 +44,7 @@ export default function PreflightChecker() {
     return (
       <div className="p-4 rounded-lg text-center" style={{ background: 'var(--bg-card)' }}>
         <RefreshCw className="w-6 h-6 text-blue-400 mx-auto mb-2 animate-spin" />
-        <p className="text-gray-400 text-sm">Verifying address...</p>
+        <p className="text-sm" style={{ color: 'var(--text-secondary)' }}>Verifying address...</p>
       </div>
     );
   }
@@ -77,7 +77,7 @@ export default function PreflightChecker() {
               <span className="text-2xl font-bold text-white">{verificationResult.score}</span>
             </div>
             <div>
-              <h3 className="font-bold text-white">Pre-Flight Score</h3>
+              <h3 className="font-bold" style={{ color: 'var(--text-primary)' }}>Pre-Flight Score</h3>
               <p className={`text-sm ${
                 hasBlockers ? 'text-red-300' : verificationResult.score >= 75 ? 'text-green-300' : 'text-yellow-300'
               }`}>
@@ -108,7 +108,7 @@ export default function PreflightChecker() {
               key={index}
               className="p-3 rounded-lg bg-red-500/10 border border-red-500/30"
             >
-              <p className="text-sm text-red-200">{blocker}</p>
+              <p className="text-sm font-medium" style={{ color: '#000000' }}>{blocker}</p>
             </div>
           ))}
         </div>
@@ -126,7 +126,7 @@ export default function PreflightChecker() {
               key={index}
               className="p-3 rounded-lg bg-yellow-500/10 border border-yellow-500/30"
             >
-              <p className="text-sm text-yellow-200">{warning}</p>
+              <p className="text-sm font-medium" style={{ color: '#000000' }}>{warning}</p>
             </div>
           ))}
         </div>
@@ -138,7 +138,7 @@ export default function PreflightChecker() {
           onClick={() => setExpandedChecks(!expandedChecks)}
           className="w-full flex items-center justify-between p-4"
         >
-          <span className="text-sm font-semibold text-gray-300">
+          <span className="text-sm font-semibold" style={{ color: 'var(--text-primary)' }}>
             Detailed Checks ({verificationResult.checks.length})
           </span>
           {expandedChecks ? (
@@ -155,7 +155,7 @@ export default function PreflightChecker() {
                 key={index}
                 className="flex items-center justify-between py-2 border-b border-gray-700/50 last:border-b-0"
               >
-                <span className="text-sm text-gray-400">{check.name}</span>
+                <span className="text-sm" style={{ color: 'var(--text-secondary)' }}>{check.name}</span>
                 <span className={`text-sm font-medium ${check.passed ? 'text-green-400' : 'text-red-400'}`}>
                   {check.passed ? (
                     <span className="flex items-center gap-1">
@@ -179,8 +179,8 @@ export default function PreflightChecker() {
           <div className="flex items-start gap-3">
             <Zap className="w-5 h-5 text-green-400 flex-shrink-0 mt-0.5" />
             <div>
-              <h4 className="text-sm font-semibold text-green-300">Ready for Next Step!</h4>
-              <p className="text-sm text-green-200/70 mt-1">
+              <h4 className="text-sm font-semibold" style={{ color: '#000000' }}>Ready for Next Step!</h4>
+              <p className="text-sm mt-1" style={{ color: '#000000' }}>
                 Your address passes pre-flight checks. Proceed to generate your verification package.
               </p>
             </div>

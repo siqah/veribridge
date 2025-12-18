@@ -88,14 +88,11 @@ export default function MyOrders() {
 
   return (
     <div className="max-w-6xl mx-auto">
-      {/* Header */}
-      <div className="mb-8">
-        <h1 className="text-3xl font-bold mb-2" style={{ color: 'var(--text-primary)' }}>
-          My Company Formations
+      {/* Page Title */}
+      <div className="mb-6">
+        <h1 className="text-2xl font-bold" style={{ color: 'var(--text-primary)' }}>
+          My Orders
         </h1>
-        <p style={{ color: 'var(--text-secondary)' }}>
-          Track your orders and download certificates
-        </p>
       </div>
 
       {/* Stats & Filters */}

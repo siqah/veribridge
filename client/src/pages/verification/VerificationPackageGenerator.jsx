@@ -50,11 +50,9 @@ export default function VerificationPackageGenerator() {
       };
       
       // Call backend API to create verification record
-      console.log('Creating verification via API...');
       const apiResponse = await createVerification(userData);
       
       if (apiResponse.success) {
-        console.log('API Response:', apiResponse.data);
         
         // Use server-generated verification ID and QR code
         userData.verificationId = apiResponse.data.verificationId;
@@ -94,11 +92,10 @@ export default function VerificationPackageGenerator() {
       }
       
     } catch (error) {
-      console.error('Error generating package:', error);
+      // Error handling - API connection failed
       setApiError(error.message || 'Failed to connect to backend API. Make sure the server is running on port 3001.');
       
       // Fallback to local generation if API fails
-      console.log('Falling back to local generation...');
       try {
         const localUserData = {
           fullName,
@@ -137,7 +134,7 @@ export default function VerificationPackageGenerator() {
           },
         ]);
       } catch (fallbackError) {
-        console.error('Fallback generation also failed:', fallbackError);
+        // Fallback generation failed
       }
     } finally {
       setIsGenerating(false);

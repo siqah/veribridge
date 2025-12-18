@@ -22,7 +22,7 @@ export default function AddressAnalysis({ addressComponents, formattedAddress })
       {/* Issues Detection */}
       {issues.length > 0 && (
         <div className="space-y-3 mb-6">
-          <p className="text-sm font-medium text-gray-400">Our system found {issues.length} issue{issues.length > 1 ? 's' : ''}:</p>
+          <p className="text-sm font-medium" style={{ color: 'var(--text-secondary)' }}>Our system found {issues.length} issue{issues.length > 1 ? 's' : ''}:</p>
           {issues.map((issue, index) => (
             <div
               key={index}
@@ -44,7 +44,7 @@ export default function AddressAnalysis({ addressComponents, formattedAddress })
                   }`}>
                     {issue.message}
                   </p>
-                  <p className="text-xs text-gray-400">
+                  <p className="text-xs" style={{ color: 'var(--text-secondary)' }}>
                     <span className="font-semibold">Fix:</span> {issue.fix}
                   </p>
                 </div>
@@ -68,7 +68,7 @@ export default function AddressAnalysis({ addressComponents, formattedAddress })
       
       {/* Output Options */}
       <div className="space-y-4">
-        <h4 className="text-sm font-semibold text-gray-300 flex items-center gap-2">
+        <h4 className="text-sm font-semibold flex items-center gap-2" style={{ color: 'var(--text-primary)' }}>
           <Info className="w-4 h-4" />
           Recommended Formats (Copy & Paste Ready)
         </h4>
@@ -89,36 +89,36 @@ export default function AddressAnalysis({ addressComponents, formattedAddress })
                   </span>
                 )}
               </h5>
-              <p className="text-xs text-gray-400 mt-1">{optionA.description}</p>
+              <p className="text-xs mt-1" style={{ color: 'var(--text-muted)' }}>{optionA.description}</p>
             </div>
           </div>
           <div className="space-y-2">
             <div className="flex gap-3">
-              <span className="text-xs text-gray-500 w-32">Address Line 1:</span>
+              <span className="text-xs w-32" style={{ color: 'var(--text-muted)' }}>Address Line 1:</span>
               <span className="text-sm font-mono" style={{ color: 'var(--accent-blue)' }}>
                 {optionA.lines.line1}
               </span>
             </div>
             <div className="flex gap-3">
-              <span className="text-xs text-gray-500 w-32">Address Line 2:</span>
+              <span className="text-xs w-32" style={{ color: 'var(--text-muted)' }}>Address Line 2:</span>
               <span className="text-sm font-mono" style={{ color: 'var(--accent-blue)' }}>
                 {optionA.lines.line2}
               </span>
             </div>
             <div className="flex gap-3">
-              <span className="text-xs text-gray-500 w-32">City / Town:</span>
+              <span className="text-xs w-32" style={{ color: 'var(--text-muted)' }}>City / Town:</span>
               <span className="text-sm font-mono" style={{ color: 'var(--accent-blue)' }}>
                 {optionA.lines.city}
               </span>
             </div>
             <div className="flex gap-3">
-              <span className="text-xs text-gray-500 w-32">Postal Code:</span>
+              <span className="text-xs w-32" style={{ color: 'var(--text-muted)' }}>Postal Code:</span>
               <span className="text-sm font-mono" style={{ color: 'var(--accent-blue)' }}>
                 {optionA.lines.postalCode}
               </span>
             </div>
             <div className="flex gap-3">
-              <span className="text-xs text-gray-500 w-32">Country:</span>
+              <span className="text-xs w-32" style={{ color: 'var(--text-muted)' }}>Country:</span>
               <span className="text-sm font-mono" style={{ color: 'var(--accent-blue)' }}>
                 {optionA.lines.country}
               </span>
@@ -142,13 +142,13 @@ export default function AddressAnalysis({ addressComponents, formattedAddress })
               <h5 className="text-sm font-bold" style={{ color: 'var(--text-primary)' }}>
                 Option B: {optionB.label}
               </h5>
-              <p className="text-xs text-gray-400 mt-1">{optionB.description}</p>
+              <p className="text-xs mt-1" style={{ color: 'var(--text-muted)' }}>{optionB.description}</p>
             </div>
           </div>
           <div className="space-y-2">
             <div className="flex gap-3">
               <span className="text-xs text-gray-500 w-32">Address Line 1:</span>
-              <span className="text-sm font-mono text-gray-300">
+              <span className="text-sm font-mono" style={{ color: 'var(--text-secondary)' }}>
                 {optionB.lines.line1}
               </span>
             </div>
@@ -195,7 +195,7 @@ export default function AddressAnalysis({ addressComponents, formattedAddress })
           <h5 className="text-sm font-semibold mb-3" style={{ color: 'var(--text-primary)' }}>
             🎯 Why This Works (The "Secret Sauce")
           </h5>
-          <ul className="space-y-2 text-sm text-gray-300">
+          <ul className="space-y-2 text-sm" style={{ color: 'var(--text-secondary)' }}>
             {issues.find(i => i.type === 'WRONG_POSTAL_CODE') && (
               <li className="flex items-start gap-2">
                 <span className="text-green-400 font-bold">✓</span>
@@ -226,7 +226,7 @@ export default function AddressAnalysis({ addressComponents, formattedAddress })
       
       {/* Next Steps */}
       <div className="mt-4 p-3 rounded-lg bg-blue-500/10 border border-blue-500/20">
-        <p className="text-xs text-blue-200">
+        <p className="text-xs" style={{ color: '#000000' }}>
           💡 <span className="font-semibold">Pro Tip:</span> Copy Option A and give it to your bank teller. 
           Don't say "I live near the Mosque." Say "Please update my address to: [Option A]"
         </p>
