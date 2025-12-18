@@ -25,7 +25,8 @@ export default function LandingPage() {
       description: 'Stop getting rejected. Convert "Near Mosque" into a format Google accepts.',
       icon: MapPin,
       style: colorStyles.blue,
-      href: '/address-builder'
+      href: '/address-builder',
+      badge: 'FREE'
     },
     {
       title: 'UK Company Formation',
@@ -50,13 +51,6 @@ export default function LandingPage() {
       style: colorStyles.orange,
       href: '/invoicing',
       protected: true
-    },
-    {
-      title: 'Verification Packages',
-      description: 'Get the "Green Checkmark" with our pre-verified document bundles.',
-      icon: Package,
-      style: colorStyles.pink,
-      href: '/verification-package'
     },
     {
       title: 'Business API',
@@ -134,16 +128,16 @@ export default function LandingPage() {
         <div>
           <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-blue-500/10 border border-blue-500/20 text-blue-400 text-sm font-medium mb-6">
             <Globe className="w-4 h-4" />
-            <span>Trusted by 500+ Kenyan Developers</span>
+            <span>Trusted by 500+ Developers Worldwide</span>
           </div>
           
           <h1 className="text-5xl lg:text-6xl font-bold text-white leading-tight mb-6">
             Global Business, <br />
-            <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-purple-400">Kenyan Identity.</span>
+            <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-purple-400">Local Identity.</span>
           </h1>
           
           <p className="text-lg text-slate-400 mb-8 max-w-lg leading-relaxed">
-            Stop getting rejected by Google and Stripe. We format your identity, register your UK company, and handle your compliance—so you can get paid globally.
+            Stop getting rejected by Google and Stripe. We format your address for international platforms—whether you're in Nairobi, Lagos, Manila, or Mumbai.
           </p>
           
           <div className="flex flex-col sm:flex-row gap-4">
@@ -282,7 +276,7 @@ export default function LandingPage() {
           Ready to verify your identity?
         </h2>
         <p className="text-xl text-slate-400 mb-10">
-          Join thousands of African developers who are working globally.
+          Join thousands of developers worldwide who are earning globally.
         </p>
         <button
           onClick={() => navigate('/signup')}

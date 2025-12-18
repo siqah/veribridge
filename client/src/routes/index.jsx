@@ -5,11 +5,6 @@ import DemoPage from '../pages/DemoPage';
 
 // Verification Pages
 import AddressBuilder from '../pages/verification/AddressBuilder';
-import VerificationPackageGenerator from '../pages/verification/VerificationPackageGenerator';
-import BankGuides from '../pages/verification/BankGuides';
-import BankCardGenerator from '../pages/verification/BankCardGenerator';
-import AffidavitGenerator from '../pages/verification/AffidavitGenerator';
-import OCRValidator from '../pages/verification/OCRValidator';
 
 // Business Pages
 import CompanyFormation from '../pages/business/CompanyFormation';
@@ -59,11 +54,6 @@ export const appLayoutRoutes = {
   // Verification Tools (public)
   verification: [
     { path: 'address-builder', element: AddressBuilder },
-    { path: 'verification-package', element: VerificationPackageGenerator },
-    { path: 'bank-guides', element: BankGuides },
-    { path: 'bank-card', element: BankCardGenerator },
-    { path: 'affidavit', element: AffidavitGenerator },
-    { path: 'ocr-validator', element: OCRValidator },
   ],
   
   // Business Services (protected)

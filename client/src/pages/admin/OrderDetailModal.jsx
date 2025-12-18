@@ -180,16 +180,13 @@ export default function OrderDetailModal({ order, onClose, onUpdate }) {
           <div>
             <div className="flex items-center gap-2 mb-2">
               <Shield className="w-4 h-4 text-gray-400" />
-              <label className="text-xs text-gray-400">KYC/Sanctions</label>
+              <label className="text-xs text-gray-400">KYC Status</label>
             </div>
             <div className="text-sm">
               {order.kyc_verified ? (
                 <span className="text-green-400">✓ Verified</span>
               ) : (
                 <span className="text-yellow-400">⚠ Pending</span>
-              )}
-              {order.sanctions_checked && (
-                <span className="text-green-400 ml-2">✓ Screened</span>
               )}
             </div>
           </div>

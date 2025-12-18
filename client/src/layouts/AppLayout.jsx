@@ -23,11 +23,6 @@ export default function AppLayout() {
       '/': 'Home',
       '/dashboard': 'Dashboard',
       '/address-builder': 'Address Architect',
-      '/verification-package': 'Verification Package',
-      '/bank-card': 'Bank Instructions',
-      '/bank-guides': 'Quick Update',
-      '/affidavit': 'Affidavit Generator',
-      '/ocr-validator': 'Document Scanner',
       '/company-formation': 'Company Formation',
       '/invoicing': 'Invoicing Suite',
       '/mailbox': 'Digital Mailbox',
@@ -53,10 +48,6 @@ export default function AppLayout() {
       label: 'Verification',
       items: [
         { path: '/address-builder', title: 'Address Architect', icon: MapPin },
-        { path: '/verification-package', title: 'Full Package', icon: Package },
-        { path: '/bank-card', title: 'Bank Instructions', icon: Printer },
-        { path: '/bank-guides', title: 'Quick Update', icon: Smartphone },
-        { path: '/ocr-validator', title: 'Document Scanner', icon: Search },
       ]
     },
     {

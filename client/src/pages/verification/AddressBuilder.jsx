@@ -1,23 +1,9 @@
-import { useEffect, useState, useCallback, useRef } from 'react';
-import { MapPin, AlertCircle, CheckCircle2, Search, Copy, Share2, Check, Globe, Shield, Home } from 'lucide-react';
+import { useEffect, useState } from 'react';
+import { MapPin, Copy, Check, Globe, Home, AlertCircle, CheckCircle2, Lightbulb, Building2, CreditCard, Mail } from 'lucide-react';
 import { useAddressStore } from '../../store/addressStore';
-import { formatAddress, validateAddress } from '../../utils/addressLogic';
-import { getCountriesSorted, getCountryByCode, getAllRegions } from '../../data/countries';
-import PreflightChecker from '../../components/PreflightChecker';
-import AddressAnalysis from '../../components/AddressAnalysis';
-
-// OpenStreetMap Nominatim API endpoint
-const NOMINATIM_API = 'https://nominatim.openstreetmap.org/search';
 
 export default function AddressBuilder() {
-  const [searchQuery, setSearchQuery] = useState('');
-  const [searchResults, setSearchResults] = useState([]);
-  const [isSearching, setIsSearching] = useState(false);
-  const [showResults, setShowResults] = useState(false);
-  const searchTimeoutRef = useRef(null);
-  const resultsRef = useRef(null);
-  
-  const countries = getCountriesSorted();
+  const [copied, setCopied] = useState({ option1: false, option2: false });
   
   const {
     country,
@@ -26,413 +12,444 @@ export default function AddressBuilder() {
     street,
     area,
     city,
-    state,
     postalCode,
-    formattedAddress,
-    validation,
     setCountry,
     setBuilding,
     setStreet,
     setArea,
     setCity,
-    setState,
     setPostalCode,
-    setFormattedAddress,
-    setValidation,
-    updateAddressComponents,
   } = useAddressStore();
   
-  // Handle country change
-  const handleCountryChange = (e) => {
-    const code = e.target.value;
-    const countryData = getCountryByCode(code);
-    if (countryData) {
-      setCountry(code, countryData.name);
+  // Generate two formatted address options in proper Western format
+  const generateAddressOptions = () => {
+    if (!street || !city) return { option1: '', option2: '' };
+    
+    // WESTERN FORMAT STRUCTURE:
+    // Line 1: Physical Location (Street Number + Street Name)
+    // Line 2: Building Context (Building Name, Apartment, Floor)
+    // Line 3: City, Postal Code
+    // Line 4: Country
+    
+    // Option 1: Full format (2-line version for forms)
+    const line1 = street; // e.g., "Plot 45, Sheikh Mahmoud Road"
+    const line2 = building; // e.g., "Makina Building, 2nd Floor"
+    const cityLine = postalCode ? `${city}, ${postalCode}` : city;
+    
+    const option1Parts = [line1, line2, cityLine, countryName].filter(Boolean);
+    const option1 = option1Parts.join('\n');
+    
+    // Option 2: Single-line compact version
+    const option2Parts = [];
+    if (building) option2Parts.push(building);
+    option2Parts.push(street);
+    if (postalCode) {
+      option2Parts.push(`${city} ${postalCode}`);
+    } else {
+      option2Parts.push(city);
     }
+    option2Parts.push(countryName);
+    
+    const option2 = option2Parts.join(', ');
+    
+    return { 
+      option1, 
+      option2,
+      line1, // For display purposes
+      line2,
+      cityLine
+    };
   };
   
-  // Search for places using OpenStreetMap Nominatim (worldwide)
-  const searchPlaces = useCallback(async (query) => {
-    if (!query || query.length < 3) {
-      setSearchResults([]);
-      return;
-    }
-    
-    setIsSearching(true);
-    
-    try {
-      const params = {
-        q: query,
-        format: 'json',
-        addressdetails: '1',
-        limit: '5',
-      };
-      
-      // Add country filter if selected
-      if (country) {
-        params.countrycodes = country.toLowerCase();
-      }
-      
-      const response = await fetch(
-        `${NOMINATIM_API}?` + new URLSearchParams(params),
-        {
-          headers: {
-            'User-Agent': 'VeriBridge/1.0',
-          },
-        }
-      );
-      
-      if (!response.ok) throw new Error('Search failed');
-      
-      const data = await response.json();
-      setSearchResults(data);
-      setShowResults(true);
-    } catch (error) {
-      console.error('Error searching places:', error);
-      setSearchResults([]);
-    } finally {
-      setIsSearching(false);
-    }
-  }, [country]);
+  const { option1, option2, line1, line2, cityLine } = generateAddressOptions();
+  const hasAddress = option1 || option2;
   
-  // Debounced search
-  useEffect(() => {
-    if (searchTimeoutRef.current) {
-      clearTimeout(searchTimeoutRef.current);
-    }
-    
-    searchTimeoutRef.current = setTimeout(() => {
-      searchPlaces(searchQuery);
-    }, 500);
-    
-    return () => {
-      if (searchTimeoutRef.current) {
-        clearTimeout(searchTimeoutRef.current);
-      }
-    };
-  }, [searchQuery, searchPlaces]);
-  
-  // Handle clicking outside to close results
-  useEffect(() => {
-    const handleClickOutside = (event) => {
-      if (resultsRef.current && !resultsRef.current.contains(event.target)) {
-        setShowResults(false);
-      }
-    };
-    
-    document.addEventListener('mousedown', handleClickOutside);
-    return () => document.removeEventListener('mousedown', handleClickOutside);
-  }, []);
-  
-  // Handle selecting a search result
-  const handleSelectPlace = (place) => {
-    const address = place.address || {};
-    
-    updateAddressComponents({
-      building: address.building || address.house || address.amenity || '',
-      street: address.road || address.street || '',
-      area: address.suburb || address.neighbourhood || address.city_district || '',
-      city: address.city || address.town || address.village || '',
-      state: address.state || address.county || address.region || '',
-      postalCode: address.postcode || '',
+  const handleCopy = (text, optionKey) => {
+    navigator.clipboard.writeText(text).then(() => {
+      setCopied({ ...copied, [optionKey]: true });
+      setTimeout(() => setCopied({ ...copied, [optionKey]: false }), 2000);
     });
-    
-    setSearchQuery('');
-    setSearchResults([]);
-    setShowResults(false);
   };
-  
-  // Update formatted address whenever components change
-  useEffect(() => {
-    const addressComponents = { building, street, area, city, state, postalCode, countryName };
-    const formatted = formatAddress(addressComponents);
-    setFormattedAddress(formatted);
-    
-    const validationResult = validateAddress(formatted);
-    setValidation(validationResult);
-  }, [building, street, area, city, state, postalCode, countryName, setFormattedAddress, setValidation]);
   
   return (
     <div className="space-y-6">
-      {/* Country Selector */}
-      <div>
-        <label className="label flex items-center gap-2">
-          <Globe className="w-4 h-4 text-blue-400" />
-          Select Your Country
-        </label>
-        <select
-          value={country}
-          onChange={handleCountryChange}
-          className="select-field"
-        >
-          {countries.map((c) => (
-            <option key={c.code} value={c.code}>
-              {c.name}
-            </option>
-          ))}
-        </select>
-        <p className="text-xs text-gray-500 mt-2">
-          VeriBridge works in 35+ countries worldwide
+      {/* Header */}
+      <div className="text-center max-w-2xl mx-auto">
+        <h1 className="text-3xl font-bold text-white mb-3">Address Architect</h1>
+        <p className="text-gray-400">
+          Enter your address details below. We'll format it into 2 western-style options you can use for Google, Stripe, banks, and other international platforms.
         </p>
+        <div className="mt-4 inline-flex items-center gap-2 px-4 py-2 bg-green-500/10 border border-green-500/30 rounded-lg">
+          <CheckCircle2 className="w-4 h-4 text-green-400" />
+          <span className="text-sm font-medium text-green-300">Works in 35+ Countries • 100% Free</span>
+        </div>
       </div>
-      
-      {/* OpenStreetMap Search */}
-      <div className="relative" ref={resultsRef}>
-        <label className="label flex items-center gap-2">
-          <MapPin className="w-4 h-4 text-blue-400" />
-          Search Location (Optional)
-        </label>
-        
-        <div className="relative">
-          <input
-            type="text"
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-            onFocus={() => searchResults.length > 0 && setShowResults(true)}
-            placeholder={`Type to search places in ${countryName}...`}
-            className="input-field pr-10"
-          />
-          <div className="absolute right-3 top-1/2 -translate-y-1/2">
-            {isSearching ? (
-              <div className="w-5 h-5 border-2 border-blue-500 border-t-transparent rounded-full animate-spin"></div>
-            ) : (
-              <Search className="w-5 h-5 text-gray-500" />
-            )}
+
+      {/* Simple Input Form */}
+      <div className="card max-w-3xl mx-auto">
+        <div className="flex items-center gap-2 mb-6">
+          <MapPin className="w-5 h-5 text-blue-400" />
+          <h2 className="text-lg font-semibold text-white">Your Address Details</h2>
+        </div>
+
+        <div className="space-y-4">
+          {/* Street - LINE 1 */}
+          <div>
+            <label className="label">
+              Address Line 1 - Street / Road
+              <span className="ml-2 text-xs text-blue-400">(Required)</span>
+            </label>
+            <input
+              type="text"
+              value={street}
+              onChange={(e) => setStreet(e.target.value)}
+              placeholder="e.g., 123 Main Road, Plot 45, Rua dos Santos"
+              className="input-field"
+            />
+            <p className="text-xs text-gray-500 mt-1">
+              <strong>Physical location:</strong> Include street number/plot + street name
+            </p>
+          </div>
+
+          {/* Building - LINE 2 */}
+          <div>
+            <label className="label">Address Line 2 - Building / Apartment (Optional)</label>
+            <input
+              type="text"
+              value={building}
+              onChange={(e) => setBuilding(e.target.value)}
+              placeholder="e.g., Green Apartments Flat 5B, Victoria Plaza 3rd Floor"
+              className="input-field"
+            />
+            <p className="text-xs text-gray-500 mt-1">
+              <strong>Building context:</strong> Building name, floor, apartment number, or estate name
+            </p>
+          </div>
+
+          {/* City */}
+          <div>
+            <label className="label">
+              City / Town
+              <span className="ml-2 text-xs text-blue-400">(Required)</span>
+            </label>
+            <input
+              type="text"
+              value={city}
+              onChange={(e) => setCity(e.target.value)}
+              placeholder="e.g., Lagos, Manila, Mumbai, Nairobi"
+              className="input-field"
+            />
+          </div>
+
+          {/* Postal Code */}
+          <div>
+            <label className="label">Postal Code</label>
+            <input
+              type="text"
+              value={postalCode}
+              onChange={(e) => setPostalCode(e.target.value)}
+              placeholder="e.g., 100001 (use your local postal code)"
+              className="input-field"
+            />
+            <p className="text-xs text-gray-500 mt-1">
+              <strong>Tip:</strong> Use your area-specific postal code if available
+            </p>
           </div>
         </div>
-        
-        <p className="text-xs text-gray-500 mt-2">
-          Powered by OpenStreetMap • Start typing an address or landmark
-        </p>
-        
-        {/* Search Results Dropdown */}
-        {showResults && searchResults.length > 0 && (
-          <div className="absolute z-50 w-full mt-2 rounded-lg shadow-xl max-h-64 overflow-y-auto"
-               style={{ background: 'var(--bg-card)', border: '1px solid var(--border-color)' }}>
-            {searchResults.map((place) => (
-              <button
-                key={place.place_id}
-                onClick={() => handleSelectPlace(place)}
-                className="w-full px-4 py-3 text-left hover:bg-white/5 border-b border-gray-700/50 last:border-b-0 transition-colors"
-              >
-                <div className="font-medium text-sm text-white">
-                  {place.display_name.split(',')[0]}
+      </div>
+
+      {/* Formatted Address Options */}
+      {hasAddress && (
+        <div className="space-y-6 max-w-3xl mx-auto">
+          {/* Success Message */}
+          <div className="p-4 rounded-lg bg-green-500/10 border border-green-500/30">
+            <div className="flex items-start gap-3">
+              <CheckCircle2 className="w-5 h-5 text-green-400 flex-shrink-0 mt-0.5" />
+              <div>
+                <h3 className="text-sm font-semibold text-green-300 mb-1">Address Formatted Successfully!</h3>
+                <p className="text-sm text-green-200/70">
+                  Choose one of the options below to use with Google Play Console, Stripe, your bank, or any international platform.
+                </p>
+              </div>
+            </div>
+          </div>
+
+          {/* Option 1 - Multi-line Format */}
+          {option1 && (
+            <div className="card">
+              <div className="flex items-center justify-between mb-3">
+                <div className="flex items-center gap-2">
+                  <div className="w-8 h-8 rounded-full bg-blue-500/20 text-blue-400 flex items-center justify-center text-sm font-bold">
+                    1
+                  </div>
+                  <h3 className="text-base font-semibold text-white">Multi-Line Format</h3>
                 </div>
-                <div className="text-xs text-gray-400 mt-1 truncate">
-                  {place.display_name}
+                <span className="text-xs bg-blue-500/20 text-blue-400 px-2 py-1 rounded-full font-medium">
+                  For Online Forms
+                </span>
+              </div>
+
+              <div className="p-4 rounded-lg bg-white/5 border border-gray-700 mb-3 space-y-2">
+                <div>
+                  <p className="text-xs text-gray-500 mb-1">Address Line 1:</p>
+                  <p className="text-white font-mono text-sm">{line1}</p>
+                </div>
+                {line2 && (
+                  <div>
+                    <p className="text-xs text-gray-500 mb-1">Address Line 2:</p>
+                    <p className="text-white font-mono text-sm">{line2}</p>
+                  </div>
+                )}
+                <div>
+                  <p className="text-xs text-gray-500 mb-1">City, Postal Code:</p>
+                  <p className="text-white font-mono text-sm">{cityLine}</p>
+                </div>
+                <div>
+                  <p className="text-xs text-gray-500 mb-1">Country:</p>
+                  <p className="text-white font-mono text-sm">{countryName}</p>
+                </div>
+              </div>
+
+              <button
+                onClick={() => handleCopy(option1, 'option1')}
+                className="w-full btn-primary flex items-center justify-center gap-2"
+              >
+                {copied.option1 ? (
+                  <>
+                    <Check className="w-4 h-4" />
+                    Copied!
+                  </>
+                ) : (
+                  <>
+                    <Copy className="w-4 h-4" />
+                    Copy Multi-Line Format
+                  </>
+                )}
+              </button>
+            </div>
+          )}
+
+          {/* Option 2 - Single-line Format */}
+          {option2 && (
+            <div className="card">
+              <div className="flex items-center justify-between mb-3">
+                <div className="flex items-center gap-2">
+                  <div className="w-8 h-8 rounded-full bg-purple-500/20 text-purple-400 flex items-center justify-center text-sm font-bold">
+                    2
+                  </div>
+                  <h3 className="text-base font-semibold text-white">Single-Line Format</h3>
+                </div>
+                <span className="text-xs bg-purple-500/20 text-purple-400 px-2 py-1 rounded-full font-medium">
+                  Compact Version
+                </span>
+              </div>
+
+              <div className="p-4 rounded-lg bg-white/5 border border-gray-700 mb-3">
+                <p className="text-white font-mono text-sm leading-relaxed">{option2}</p>
+              </div>
+
+              <button
+                onClick={() => handleCopy(option2, 'option2')}
+                className="w-full btn-secondary flex items-center justify-center gap-2"
+              >
+                {copied.option2 ? (
+                  <>
+                    <Check className="w-4 h-4" />
+                    Copied!
+                  </>
+                ) : (
+                  <>
+                    <Copy className="w-4 h-4" />
+                    Copy Single-Line Format
+                  </>
+                )}
+              </button>
+            </div>
+          )}
+
+          {/* How to Use Instructions */}
+          <div className="card bg-gradient-to-br from-blue-500/10 to-purple-500/10 border-blue-500/30">
+            <div className="flex items-start gap-3 mb-4">
+              <Lightbulb className="w-5 h-5 text-yellow-400 flex-shrink-0 mt-0.5" />
+              <div>
+                <h3 className="text-base font-semibold text-white mb-1">How to Use Your Formatted Address</h3>
+                <p className="text-sm text-gray-300">
+                  Copy one of the addresses above and use it consistently across all platforms:
+                </p>
+              </div>
+            </div>
+
+            <div className="space-y-3">
+              <div className="flex items-start gap-3">
+                <div className="w-6 h-6 rounded-full bg-blue-500/20 text-blue-400 flex items-center justify-center text-xs font-bold flex-shrink-0">
+                  1
+                </div>
+                <div>
+                  <p className="text-sm text-white font-medium mb-1">Update Your Bank Statement</p>
+                  <p className="text-xs text-gray-400">
+                    Call your bank or use online banking to update your address. This will appear on your bank statement.
+                  </p>
+                </div>
+              </div>
+
+              <div className="flex items-start gap-3">
+                <div className="w-6 h-6 rounded-full bg-blue-500/20 text-blue-400 flex items-center justify-center text-xs font-bold flex-shrink-0">
+                  2
+                </div>
+                <div>
+                  <p className="text-sm text-white font-medium mb-1">Use for Google Play Console</p>
+                  <p className="text-xs text-gray-400">
+                    Enter this exact address when registering or verifying your Google Play Console account.
+                  </p>
+                </div>
+              </div>
+
+              <div className="flex items-start gap-3">
+                <div className="w-6 h-6 rounded-full bg-blue-500/20 text-blue-400 flex items-center justify-center text-xs font-bold flex-shrink-0">
+                  3
+                </div>
+                <div>
+                  <p className="text-sm text-white font-medium mb-1">Use for Stripe, PayPal & Payment Platforms</p>
+                  <p className="text-xs text-gray-400">
+                    This formatted address meets international KYC requirements for payment processors worldwide.
+                  </p>
+                </div>
+              </div>
+
+              <div className="flex items-start gap-3">
+                <div className="w-6 h-6 rounded-full bg-blue-500/20 text-blue-400 flex items-center justify-center text-xs font-bold flex-shrink-0">
+                  4
+                </div>
+                <div>
+                  <p className="text-sm text-white font-medium mb-1">Keep It Consistent</p>
+                  <p className="text-xs text-gray-400">
+                    Use the SAME address everywhere - your bank, ID documents, and all online platforms.
+                  </p>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* Important Notice */}
+          <div className="p-4 rounded-lg bg-yellow-500/10 border border-yellow-500/30">
+            <div className="flex items-start gap-3">
+              <AlertCircle className="w-5 h-5 text-yellow-400 flex-shrink-0 mt-0.5" />
+              <div>
+                <h4 className="text-sm font-semibold text-yellow-300 mb-1">Important</h4>
+                <p className="text-sm text-yellow-200/70">
+                  <strong>Update your bank statement first!</strong> Platforms like Google and Stripe will ask you to upload a bank statement showing this exact address. Make sure your bank has this address on file before submitting.
+                </p>
+              </div>
+            </div>
+          </div>
+
+          {/* Quick Links */}
+          <div className="grid md:grid-cols-2 gap-4">
+            <div className="p-4 rounded-lg bg-white/5 border border-gray-700 hover:border-gray-600 transition-colors">
+              <div className="flex items-start gap-3">
+                <Building2 className="w-5 h-5 text-blue-400 flex-shrink-0" />
+                <div>
+                  <h4 className="text-sm font-semibold text-white mb-1">Update Bank Address</h4>
+                  <p className="text-xs text-gray-400 mb-2">
+                    Use internet banking or visit your branch to update your address to match this format.
+                  </p>
+                  <p className="text-xs text-blue-400 font-medium">
+                    Works with any bank worldwide
+                  </p>
+                </div>
+              </div>
+            </div>
+
+            <div className="p-4 rounded-lg bg-white/5 border border-gray-700 hover:border-gray-600 transition-colors">
+              <div className="flex items-start gap-3">
+                <CreditCard className="w-5 h-5 text-purple-400 flex-shrink-0" />
+                <div>
+                  <h4 className="text-sm font-semibold text-white mb-1">Verify Instantly</h4>
+                  <p className="text-xs text-gray-400 mb-2">
+                    Once your bank statement shows this address, you're ready to submit!
+                  </p>
+                  <p className="text-xs text-purple-400 font-medium">
+                    Google • Stripe • PayPal • Amazon
+                  </p>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* Premium Services Upsell */}
+          <div className="card bg-gradient-to-br from-purple-500/10 to-blue-500/10 border-purple-500/30">
+            <div className="text-center mb-4">
+              <h3 className="text-lg font-bold text-white mb-2">🚀 Ready to Go Global?</h3>
+              <p className="text-sm text-gray-300">
+                Your address is just the first step. Unlock global payments with our premium services.
+              </p>
+            </div>
+
+            <div className="grid md:grid-cols-2 gap-4">
+              <button
+                onClick={() => window.location.href = '/company-formation'}
+                className="p-4 rounded-lg bg-white/5 border border-purple-500/30 hover:bg-white/10 transition-all text-left group"
+              >
+                <div className="flex items-start gap-3">
+                  <div className="w-10 h-10 rounded-lg bg-purple-500/20 flex items-center justify-center flex-shrink-0">
+                    <Building2 className="w-5 h-5 text-purple-400" />
+                  </div>
+                  <div className="flex-1">
+                    <h4 className="text-sm font-semibold text-white mb-1 group-hover:text-purple-300 transition-colors">
+                      UK Company Formation
+                    </h4>
+                    <p className="text-xs text-gray-400 mb-2">
+                      Unlock Stripe & PayPal payments worldwide
+                    </p>
+                    <div className="flex items-center justify-between">
+                      <span className="text-xs font-bold text-purple-400">KES 5,000</span>
+                      <span className="text-xs text-gray-500">5-10 days</span>
+                    </div>
+                  </div>
                 </div>
               </button>
-            ))}
-          </div>
-        )}
-      </div>
-      
-      {/* Manual Address Input Fields */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-        <div className="md:col-span-2">
-          <label htmlFor="building" className="label">
-            Building / Apartment / Landmark Name
-          </label>
-          <input
-            id="building"
-            type="text"
-            value={building}
-            onChange={(e) => setBuilding(e.target.value)}
-            placeholder="e.g., Green Valley Apartments, Unit 12B"
-            className="input-field"
-          />
-        </div>
-        
-        <div>
-          <label htmlFor="street" className="label">
-            Street Name & Number
-          </label>
-          <input
-            id="street"
-            type="text"
-            value={street}
-            onChange={(e) => setStreet(e.target.value)}
-            placeholder="e.g., 123 Main Street"
-            className="input-field"
-          />
-        </div>
-        
-        <div>
-          <label htmlFor="area" className="label">
-            Area / Neighborhood / District
-          </label>
-          <input
-            id="area"
-            type="text"
-            value={area}
-            onChange={(e) => setArea(e.target.value)}
-            placeholder="e.g., Downtown, Westside"
-            className="input-field"
-          />
-        </div>
-        
-        <div>
-          <label htmlFor="city" className="label">
-            City / Town
-          </label>
-          <input
-            id="city"
-            type="text"
-            value={city}
-            onChange={(e) => setCity(e.target.value)}
-            placeholder="e.g., Lagos, Manila, Mumbai"
-            className="input-field"
-          />
-        </div>
-        
-        <div>
-          <label htmlFor="state" className="label">
-            State / Province / Region
-          </label>
-          <input
-            id="state"
-            type="text"
-            value={state}
-            onChange={(e) => setState(e.target.value)}
-            placeholder="e.g., California, Lagos State"
-            className="input-field"
-          />
-        </div>
-        
-        <div>
-          <label htmlFor="postalCode" className="label">
-            Postal / ZIP Code
-          </label>
-          <input
-            id="postalCode"
-            type="text"
-            value={postalCode}
-            onChange={(e) => setPostalCode(e.target.value)}
-            placeholder="e.g., 10001, 00100"
-            className="input-field"
-          />
-        </div>
-      </div>
-      
-      {/* Formatted Address Preview */}
-      {formattedAddress && (
-        <div className="mt-6">
-          <div className="flex items-center gap-2 mb-3">
-            <Home className="w-5 h-5 text-blue-400" />
-            <h3 className="text-sm font-semibold" style={{ color: 'var(--text-primary)' }}>Formatted Address</h3>
-            <span className={`ml-auto text-xs font-semibold uppercase px-2 py-0.5 rounded ${
-              validation?.severity === 'error' ? 'bg-red-500/20 text-red-400' :
-              validation?.severity === 'warning' ? 'bg-yellow-500/20 text-yellow-400' :
-              'bg-green-500/20 text-green-400'
-            }`}>
-              {validation?.severity === 'error' ? 'Invalid' :
-               validation?.severity === 'warning' ? 'Warning' :
-               'Valid'}
-            </span>
-          </div>
-          
-          <div className={`address-preview ${
-            validation?.severity === 'error' ? 'address-preview-error' :
-            validation?.severity === 'warning' ? 'address-preview-warning' :
-            'address-preview-success'
-          }`}>
-            <p className="mb-3" style={{ color: 'var(--text-primary)' }}>{formattedAddress}</p>
-            
-            <div className={`flex items-start gap-2 text-sm ${
-              validation?.severity === 'error' ? 'text-red-400' :
-              validation?.severity === 'warning' ? 'text-yellow-400' :
-              'text-green-400'
-            }`}>
-              {validation?.severity === 'success' && <CheckCircle2 className="w-4 h-4 flex-shrink-0 mt-0.5" />}
-              {(validation?.severity === 'error' || validation?.severity === 'warning') && <AlertCircle className="w-4 h-4 flex-shrink-0 mt-0.5" />}
-              <span>{validation?.message}</span>
+
+              <button
+                onClick={() => window.location.href = '/mailbox'}
+                className="p-4 rounded-lg bg-white/5 border border-blue-500/30 hover:bg-white/10 transition-all text-left group"
+              >
+                <div className="flex items-start gap-3">
+                  <div className="w-10 h-10 rounded-lg bg-blue-500/20 flex items-center justify-center flex-shrink-0">
+                    <Mail className="w-5 h-5 text-blue-400" />
+                  </div>
+                  <div className="flex-1">
+                    <h4 className="text-sm font-semibold text-white mb-1 group-hover:text-blue-300 transition-colors">
+                      Digital Mailbox
+                    </h4>
+                    <p className="text-xs text-gray-400 mb-2">
+                      Real London address for your business
+                    </p>
+                    <div className="flex items-center justify-between">
+                      <span className="text-xs font-bold text-blue-400">KES 500/mo</span>
+                      <span className="text-xs bg-green-500/20 text-green-400 px-2 py-0.5 rounded-full font-medium">New</span>
+                    </div>
+                  </div>
+                </div>
+              </button>
             </div>
           </div>
-          
-          {/* Action Buttons */}
-          <div className="flex flex-wrap gap-3 mt-4">
-            <CopyAddressButton address={formattedAddress} />
-            <WhatsAppShareButton address={formattedAddress} />
-          </div>
-          
-          {/* Kenya-Specific Analysis & Options */}
-          {countryName === 'Kenya' && (
-            <AddressAnalysis 
-              addressComponents={{ building, street, area, city, state, postalCode, countryName }}
-              formattedAddress={formattedAddress}
-            />
-          )}
-          
-          {/* Pre-Flight Verification */}
-          <div className="mt-6 pt-6 border-t" style={{ borderColor: 'var(--border-color)' }}>
-            <div className="flex items-center gap-2 mb-4">
-              <Shield className="w-5 h-5 text-blue-400" />
-              <h3 className="text-sm font-semibold" style={{ color: 'var(--text-primary)' }}>Pre-Flight Verification</h3>
-            </div>
-            <PreflightChecker />
+        </div>
+      )}
+
+      {/* Empty State */}
+      {!hasAddress && (
+        <div className="card max-w-3xl mx-auto text-center py-12">
+          <Home className="w-12 h-12 text-gray-600 mx-auto mb-4" />
+          <h3 className="text-lg font-semibold text-gray-400 mb-2">Start Building Your Address</h3>
+          <p className="text-sm text-gray-500">
+            Fill in the form above to generate your formatted western-style address
+          </p>
+          <div className="mt-4 inline-flex items-center gap-2 px-4 py-2 bg-green-500/10 border border-green-500/30 rounded-lg">
+            <CheckCircle2 className="w-4 h-4 text-green-400" />
+            <span className="text-sm font-medium text-green-300">100% Free Tool</span>
           </div>
         </div>
       )}
     </div>
-  );
-}
-
-// Copy Address Button Component
-function CopyAddressButton({ address }) {
-  const [copied, setCopied] = useState(false);
-  
-  const handleCopy = () => {
-    if (!address) return;
-    
-    navigator.clipboard.writeText(address)
-      .then(() => {
-        setCopied(true);
-        setTimeout(() => setCopied(false), 2000);
-      })
-      .catch(err => console.error('Failed to copy:', err));
-  };
-  
-  return (
-    <button
-      onClick={handleCopy}
-      className="px-4 py-2 rounded-lg font-medium transition-all flex items-center gap-2 bg-blue-600 hover:bg-blue-700 active:scale-95 text-white"
-    >
-      {copied ? (
-        <>
-          <Check className="w-4 h-4" />
-          Copied!
-        </>
-      ) : (
-        <>
-          <Copy className="w-4 h-4" />
-          Copy Address
-        </>
-      )}
-    </button>
-  );
-}
-
-// WhatsApp Share Button Component
-function WhatsAppShareButton({ address }) {
-  const handleShare = () => {
-    const message = encodeURIComponent(
-      `📍 My Verified Address (VeriBridge):\n\n${address}\n\n✅ This address is formatted for international KYC compliance.`
-    );
-    const whatsappUrl = `https://wa.me/?text=${message}`;
-    window.open(whatsappUrl, '_blank');
-  };
-  
-  return (
-    <button
-      onClick={handleShare}
-      className="flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-all hover:opacity-90"
-      style={{ 
-        background: '#25D366',
-        color: '#fff'
-      }}
-    >
-      <Share2 className="w-4 h-4" />
-      Share via WhatsApp
-    </button>
   );
 }

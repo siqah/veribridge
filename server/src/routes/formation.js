@@ -1,7 +1,6 @@
 import express from "express";
 import prisma from "../db/prisma.js";
 import companiesHouseService from "../services/companiesHouse.js";
-import sanctionsService from "../services/sanctions.js";
 import { authenticateToken } from "./auth.js";
 
 const router = express.Router();
@@ -117,21 +116,6 @@ router.post("/", authenticateToken, async (req, res) => {
       });
     }
 
-    // Sanctions screening
-    const sanctionsResult = await sanctionsService.screenPerson({
-      fullName: directorName,
-      country: "KE",
-    });
-
-    if (sanctionsResult.isHit) {
-      console.warn(`⚠️  Sanctions hit for: ${directorName}`);
-
-      return res.status(403).json({
-        error: "Unable to process request. Please contact support.",
-        code: "COMPLIANCE_CHECK_FAILED",
-      });
-    }
-
     // Calculate payment amount
     const paymentAmount = jurisdiction === "UK" ? 20000 : 25000;
 
@@ -150,8 +134,6 @@ router.post("/", authenticateToken, async (req, res) => {
         directorEmail: directorEmail || null,
         directorPhone: directorPhone || null,
         paymentAmount,
-        sanctionsChecked: true,
-        sanctionsResult,
         kycVerified: true, // Always verified since user is authenticated
         status: "PENDING",
       },
