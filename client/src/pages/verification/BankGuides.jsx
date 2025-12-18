@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { Smartphone, ChevronDown, ChevronUp, ExternalLink, CheckCircle2, Copy, Check } from 'lucide-react';
-import { useAddressStore } from '../store/addressStore';
+import { useAddressStore } from '../../store/addressStore';
 
 // Bank-specific update guides
 const BANK_GUIDES = {

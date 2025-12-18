@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { MapPin, CreditCard, Check } from 'lucide-react';
-import PaystackCheckout from '../PaystackCheckout';
+import PaystackCheckout from '../../components/PaystackCheckout';
 
 const LOCATIONS = [
   {

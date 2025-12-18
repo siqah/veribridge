@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { Building2, ChevronRight, CheckCircle, AlertCircle, Search, Loader, Shield, X, Check } from 'lucide-react';
 import axios from 'axios';
-import PaystackCheckout from '../PaystackCheckout';
+import PaystackCheckout from '../../components/PaystackCheckout';
 
 const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3001';
 

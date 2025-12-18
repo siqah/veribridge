@@ -1,10 +1,10 @@
 import { useEffect, useState, useCallback, useRef } from 'react';
 import { MapPin, AlertCircle, CheckCircle2, Search, Copy, Share2, Check, Globe, Shield } from 'lucide-react';
-import { useAddressStore } from '../store/addressStore';
-import { formatAddress, validateAddress } from '../utils/addressLogic';
-import { getCountriesSorted, getCountryByCode, getAllRegions } from '../data/countries';
-import PreflightChecker from './PreflightChecker';
-import AddressAnalysis from './AddressAnalysis';
+import { useAddressStore } from '../../store/addressStore';
+import { formatAddress, validateAddress } from '../../utils/addressLogic';
+import { getCountriesSorted, getCountryByCode, getAllRegions } from '../../data/countries';
+import PreflightChecker from '../../components/PreflightChecker';
+import AddressAnalysis from '../../components/AddressAnalysis';
 
 // OpenStreetMap Nominatim API endpoint
 const NOMINATIM_API = 'https://nominatim.openstreetmap.org/search';

@@ -1,7 +1,7 @@
 import { useState, useCallback } from 'react';
 import { Upload, AlertCircle, CheckCircle2, XCircle, Loader2 } from 'lucide-react';
 import { createWorker } from 'tesseract.js';
-import { useAddressStore } from '../store/addressStore';
+import { useAddressStore } from '../../store/addressStore';
 
 // P.O. Box patterns to detect - moved outside component
 const PO_BOX_PATTERNS = [

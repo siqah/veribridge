@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { FileDown, Printer, CheckCircle2, Building } from 'lucide-react';
-import { useAddressStore } from '../store/addressStore';
-import { generateBankInstructionPDF, downloadPDF, getAvailableBanks } from '../utils/pdfTemplates';
+import { useAddressStore } from '../../store/addressStore';
+import { generateBankInstructionPDF, downloadPDF, getAvailableBanks } from '../../utils/pdfTemplates';
 
 export default function BankCardGenerator() {
   const [selectedBank, setSelectedBank] = useState('');

@@ -1,9 +1,9 @@
 import { useState } from 'react';
 import { FileText, Download, CheckCircle2, Package, Shield, AlertTriangle, User, Phone, Mail, CreditCard, Cloud } from 'lucide-react';
-import { useAddressStore } from '../store/addressStore';
-import { generateAffidavitPDF, downloadAffidavit } from '../utils/affidavitTemplate';
-import { generateVerificationCertificate, generateCoverLetter, downloadDocument } from '../utils/verificationPackage';
-import { createVerification } from '../services/api';
+import { useAddressStore } from '../../store/addressStore';
+import { generateAffidavitPDF, downloadAffidavit } from '../../utils/affidavitTemplate';
+import { generateVerificationCertificate, generateCoverLetter, downloadDocument } from '../../utils/verificationPackage';
+import { createVerification } from '../../services/api';
 
 export default function VerificationPackageGenerator() {
   const [fullName, setFullName] = useState('');

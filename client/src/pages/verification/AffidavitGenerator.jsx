@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { FileText, Download, CheckCircle2, AlertCircle, Scale } from 'lucide-react';
-import { useAddressStore } from '../store/addressStore';
-import { generateAffidavitPDF, downloadAffidavit } from '../utils/affidavitTemplate';
+import { useAddressStore } from '../../store/addressStore';
+import { generateAffidavitPDF, downloadAffidavit } from '../../utils/affidavitTemplate';
 
 export default function AffidavitGenerator() {
   const [fullName, setFullName] = useState('');
