@@ -16,6 +16,7 @@ import MyOrders from '../pages/business/MyOrders';
 
 // Admin Pages
 import FormationOrders from '../pages/admin/FormationOrders';
+import OrderDetail from '../pages/admin/OrderDetail';
 
 // Auth Pages
 import Login from '../pages/auth/Login';
@@ -68,7 +69,8 @@ export const appLayoutRoutes = {
   
   // Admin (admin only)
   admin: [
-    { path: 'admin/formations', element: FormationOrders, admin: true },
+    { path: 'admin', element: FormationOrders, admin: true },
+    { path: 'admin/order/:id', element: OrderDetail, admin: true },
   ],
   
   // Legal (public)

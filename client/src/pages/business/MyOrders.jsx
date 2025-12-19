@@ -1,5 +1,6 @@
 import {  useState, useEffect } from 'react';
 import { Building2, Download, Clock, CheckCircle, AlertCircle, FileText, Mail } from 'lucide-react';
+import { useAuth } from '../../contexts/AuthContext';
 
 const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3001';
 
@@ -37,6 +38,7 @@ const STATUS_CONFIG = {
 };
 
 export default function MyOrders() {
+  const { getToken } = useAuth();
   const [orders, setOrders] = useState([]);
   const [loading, setLoading] = useState(true);
   const [filter, setFilter] = useState('ALL');
@@ -47,8 +49,14 @@ export default function MyOrders() {
 
   const fetchOrders = async () => {
     try {
-      // In production, this would be user-specific based on auth
-      const response = await fetch(`${API_URL}/api/formation`);
+      const token = await getToken();
+      
+      const response = await fetch(`${API_URL}/api/formation/my-orders`, {
+        headers: {
+          'Authorization': `Bearer ${token}`,
+        },
+      });
+      
       const data = await response.json();
       
       if (data.success) {

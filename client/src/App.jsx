@@ -1,6 +1,7 @@
 import { Routes, Route, Navigate } from 'react-router-dom';
 import { useAuth } from './contexts/AuthContext';
 import AppLayout from './layouts/AppLayout';
+import AdminLayout from './layouts/AdminLayout';
 import {
   authRoutes,
   standaloneRoutes,
@@ -27,7 +28,7 @@ function App() {
         />
       ))}
 
-      {/* Routes with AppLayout */}
+      {/* Routes with AppLayout (User-facing) */}
       <Route path="/" element={<AppLayout />}>
         {/* Dashboard - Protected */}
         {appLayoutRoutes.dashboard?.map(({ path, element: Element }) => (
@@ -52,18 +53,20 @@ function App() {
           />
         ))}
 
-        {/* Admin Routes - Admin Only */}
-        {appLayoutRoutes.admin.map(({ path, element: Element }) => (
-          <Route
-            key={path}
-            path={path}
-            element={<AdminRoute><Element /></AdminRoute>}
-          />
-        ))}
-
         {/* Legal - Public */}
         {appLayoutRoutes.legal.map(({ path, element: Element }) => (
           <Route key={path} path={path} element={<Element />} />
+        ))}
+      </Route>
+
+      {/* Admin Routes - Separate Layout with Admin Sidebar */}
+      <Route path="/admin" element={<AdminLayout />}>
+        {appLayoutRoutes.admin.map(({ path, element: Element }) => (
+          <Route
+            key={path}
+            path={path === 'admin' ? '' : path.replace('admin/', '')}
+            element={<AdminRoute><Element /></AdminRoute>}
+          />
         ))}
       </Route>
 
@@ -74,3 +77,4 @@ function App() {
 }
 
 export default App;
+
