@@ -2,6 +2,7 @@ import express from "express";
 import prisma from "../db/prisma.js";
 import companiesHouseService from "../services/companiesHouse.js";
 import { authenticateToken } from "./auth.js";
+import { logFormationAlert } from "../utils/formationEmail.js";
 
 const router = express.Router();
 
@@ -90,10 +91,18 @@ router.post("/", authenticateToken, async (req, res) => {
       jurisdiction,
       companyType,
       industryCode,
+      sicCode,
+      customSicCode,
       directorName,
+      directorDob,
+      nationality,
+      occupation,
       directorAddress,
       directorEmail,
       directorPhone,
+      townOfBirth,
+      mothersMaidenName,
+      fathersFirstName,
     } = req.body;
 
     // Validation
@@ -116,8 +125,11 @@ router.post("/", authenticateToken, async (req, res) => {
       });
     }
 
-    // Calculate payment amount
-    const paymentAmount = jurisdiction === "UK" ? 20000 : 25000;
+    // Calculate payment amount (updated 2025 pricing)
+    const paymentAmount = jurisdiction === "UK" ? 25000 : 25000;
+
+    // Use customSicCode if sicCode is 'other'
+    const finalSicCode = sicCode === "other" ? customSicCode : sicCode;
 
     // Create formation order
     const formation = await prisma.companyOrder.create({
@@ -128,13 +140,22 @@ router.post("/", authenticateToken, async (req, res) => {
         altName2: altName2 || null,
         jurisdiction,
         companyType,
-        industryCode: industryCode || null,
+        industryCode: finalSicCode || industryCode || null,
         directorName,
         directorAddress,
         directorEmail: directorEmail || null,
         directorPhone: directorPhone || null,
+        directorData: {
+          directorDob,
+          nationality,
+          occupation,
+          townOfBirth,
+          mothersMaidenName,
+          fathersFirstName,
+          sicCode: finalSicCode,
+        },
         paymentAmount,
-        kycVerified: true, // Always verified since user is authenticated
+        kycVerified: true,
         status: "PENDING",
       },
     });
@@ -148,18 +169,8 @@ router.post("/", authenticateToken, async (req, res) => {
       },
     });
 
-    // Admin notification
-    console.log(`
-🏢 NEW COMPANY FORMATION ORDER
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-Order ID: ${formation.id}
-Company: ${companyName}
-Type: ${jurisdiction} ${companyType}
-Director: ${directorName}
-Amount: KES ${paymentAmount}
-Status: PENDING PAYMENT
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-    `);
+    // Generate and log admin alert email (formatted for 1st Formations)
+    logFormationAlert(formation, req.body);
 
     res.status(201).json({
       success: true,

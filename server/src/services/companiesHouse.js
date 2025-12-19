@@ -30,12 +30,49 @@ class CompaniesHouseService {
    * @returns {Promise<{available: boolean, suggestions: Array}>}
    */
   async checkNameAvailability(companyName) {
+    // Fallback: If no API key, simulate availability check
     if (!this.apiKey) {
-      throw new Error("Companies House API key not configured");
+      console.warn("⚠️  No API key - simulating name check");
+      const normalizedName = companyName.trim().toUpperCase();
+
+      // Simulate some obviously taken names
+      const takenNames = [
+        "GOOGLE",
+        "MICROSOFT",
+        "AMAZON",
+        "APPLE",
+        "FACEBOOK",
+        "TWITTER",
+        "TEST",
+      ];
+      const isTaken = takenNames.some((name) => normalizedName.includes(name));
+
+      if (isTaken) {
+        return {
+          available: false,
+          simulated: true,
+          exactMatch: {
+            name: companyName,
+            message: "This name contains a protected term",
+          },
+          suggestions: this._generateSuggestions(companyName, []),
+        };
+      }
+
+      // Most names appear available in simulation mode
+      return {
+        available: true,
+        simulated: true,
+        suggestions: [],
+      };
     }
 
     try {
       const normalizedName = companyName.trim().toUpperCase();
+
+      console.log(
+        `🔍 Checking company name with Companies House: "${companyName}"`
+      );
 
       const response = await axios.get(`${this.baseUrl}/search/companies`, {
         params: { q: normalizedName, items_per_page: 5 },
@@ -46,7 +83,10 @@ class CompaniesHouseService {
         headers: {
           Accept: "application/json",
         },
+        timeout: 15000, // 15 second timeout
       });
+
+      console.log(`✅ Companies House API responded successfully`);
 
       // Check for exact match (case-insensitive)
       const exactMatch = response.data.items?.find(

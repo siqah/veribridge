@@ -128,6 +128,16 @@ export const AuthProvider = ({ children }) => {
     }
   };
 
+  const getToken = async () => {
+    try {
+      const { data: { session } } = await supabase.auth.getSession();
+      return session?.access_token || null;
+    } catch (error) {
+      console.error('Get token error:', error);
+      return null;
+    }
+  };
+
   const value = {
     user,
     session,
@@ -137,6 +147,7 @@ export const AuthProvider = ({ children }) => {
     logout,
     resetPassword,
     updatePassword,
+    getToken,
   };
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

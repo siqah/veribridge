@@ -17,6 +17,7 @@ datasource db {
 
 model User {
   id            String   @id @default(uuid())
+  supabaseId    String?  @unique @map("supabase_id") // Supabase user ID
   email         String   @unique
   passwordHash  String   @map("password_hash")
   fullName      String?  @map("full_name")
@@ -38,6 +39,7 @@ model User {
   mailboxSubscriptions MailboxSubscription[]
 
   @@index([email])
+  @@index([supabaseId])
   @@map("users")
 }
 
@@ -93,6 +95,11 @@ model CompanyOrder {
   // Status & Processing
   status            String    @default("PENDING") // 'DRAFT', 'PENDING', 'PAID', 'PROCESSING', 'COMPLETED', 'REJECTED'
   adminNotes        String?   @map("admin_notes")
+  
+  // Partner Integration (Rapid Formations / Formation Agent)
+  partnerOrderId    String?   @map("partner_order_id") // Order ID from formation partner
+  partnerStatus     String?   @map("partner_status") // 'SUBMITTED', 'PROCESSING', 'COMPLETED', 'FAILED'
+  partnerWebhookData Json?    @map("partner_webhook_data") // Raw webhook payload from partner
   
   // Registration Details
   registrationNumber String? @map("registration_number") // Company number once registered  

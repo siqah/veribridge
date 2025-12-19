@@ -467,6 +467,7 @@ router.post("/reset-password", async (req, res) => {
 
 /**
  * Middleware: Authenticate JWT token
+ * Supports both custom JWT and Supabase JWT
  */
 export function authenticateToken(req, res, next) {
   const authHeader = req.headers["authorization"];
@@ -476,14 +477,64 @@ export function authenticateToken(req, res, next) {
     return res.status(401).json({ error: "Access token required" });
   }
 
-  jwt.verify(token, JWT_SECRET, (err, user) => {
-    if (err) {
-      return res.status(403).json({ error: "Invalid or expired token" });
-    }
+  // Try Supabase JWT first (if using Supabase auth)
+  const SUPABASE_JWT_SECRET = process.env.SUPABASE_JWT_SECRET;
 
-    req.user = user; // { userId, email }
-    next();
-  });
+  if (SUPABASE_JWT_SECRET) {
+    jwt.verify(token, SUPABASE_JWT_SECRET, async (err, decoded) => {
+      if (!err) {
+        // Supabase JWT validated successfully
+        // Extract user ID from Supabase JWT (sub field)
+        const supabaseUserId = decoded.sub;
+
+        // Find or create user in our database using Supabase ID
+        try {
+          let user = await prisma.user.findUnique({
+            where: { supabaseId: supabaseUserId },
+            select: { id: true, email: true },
+          });
+
+          // If user doesn't exist, create from Supabase data
+          if (!user) {
+            user = await prisma.user.create({
+              data: {
+                supabaseId: supabaseUserId,
+                email: decoded.email,
+                passwordHash: "SUPABASE_AUTH", // Dummy hash - user authenticates via Supabase
+                fullName: decoded.user_metadata?.full_name || null,
+                emailVerified: decoded.email_confirmed_at ? true : false,
+              },
+              select: { id: true, email: true },
+            });
+          }
+
+          req.user = { userId: user.id, email: user.email };
+          return next();
+        } catch (dbError) {
+          console.error("Database error during Supabase auth:", dbError);
+          return res.status(500).json({ error: "Authentication failed" });
+        }
+      } else {
+        // Supabase JWT invalid, try custom JWT
+        jwt.verify(token, JWT_SECRET, (customErr, customUser) => {
+          if (customErr) {
+            return res.status(403).json({ error: "Invalid or expired token" });
+          }
+          req.user = customUser; // { userId, email }
+          next();
+        });
+      }
+    });
+  } else {
+    // No Supabase JWT secret, only validate custom JWT
+    jwt.verify(token, JWT_SECRET, (err, user) => {
+      if (err) {
+        return res.status(403).json({ error: "Invalid or expired token" });
+      }
+      req.user = user; // { userId, email }
+      next();
+    });
+  }
 }
 
 export default router;
