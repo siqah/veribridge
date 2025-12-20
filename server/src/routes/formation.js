@@ -1,10 +1,26 @@
 import express from "express";
+import multer from "multer";
+import path from "path";
 import prisma from "../db/prisma.js";
 import companiesHouseService from "../services/companiesHouse.js";
 import { authenticateToken } from "./auth.js";
 import { logFormationAlert } from "../utils/formationEmail.js";
+import { uploadToSupabase } from "../config/supabase.js";
 
 const router = express.Router();
+
+// Configure multer for memory storage (we'll upload to Supabase)
+const upload = multer({
+  storage: multer.memoryStorage(),
+  limits: { fileSize: 10 * 1024 * 1024 }, // 10MB max
+  fileFilter: (req, file, cb) => {
+    if (file.mimetype === "application/pdf") {
+      cb(null, true);
+    } else {
+      cb(new Error("Only PDF files are allowed"));
+    }
+  },
+});
 
 /**
  * GET /api/formation/uk-check-name
@@ -502,16 +518,55 @@ router.patch("/:id/status", async (req, res) => {
 
 /**
  * POST /api/formation/:id/upload-certificate
- * Upload incorporation certificate
- * TODO: Enable once multer is installed
+ * Upload incorporation certificate to Supabase Storage (admin only)
  */
-router.post("/:id/upload-certificate", async (req, res) => {
-  // Temporary stub until multer is installed
-  res.status(501).json({
-    error:
-      "Certificate upload temporarily disabled. Admin can update certificate_url manually via status endpoint.",
-  });
-});
+router.post(
+  "/:id/upload-certificate",
+  upload.single("certificate"),
+  async (req, res) => {
+    try {
+      const { id } = req.params;
+
+      if (!req.file) {
+        return res.status(400).json({ error: "No file uploaded" });
+      }
+
+      // Generate unique filename
+      const timestamp = Date.now();
+      const fileName = `${id.slice(0, 8)}-${timestamp}.pdf`;
+
+      // Upload to Supabase Storage
+      const publicUrl = await uploadToSupabase(
+        req.file.buffer,
+        fileName,
+        "certificates"
+      );
+
+      // Update order with certificate URL
+      const order = await prisma.companyOrder.update({
+        where: { id },
+        data: { certificateUrl: publicUrl },
+      });
+
+      console.log(
+        `📄 Certificate uploaded to Supabase for order ${id.slice(0, 8)}`
+      );
+      console.log(`   URL: ${publicUrl}`);
+
+      res.json({
+        success: true,
+        certificate_url: publicUrl,
+        message: "Certificate uploaded successfully",
+      });
+    } catch (error) {
+      console.error("Certificate upload error:", error);
+      res.status(500).json({
+        error: "Failed to upload certificate",
+        details: error.message,
+      });
+    }
+  }
+);
 
 /**
  * POST /api/formation/:id/notify-customer

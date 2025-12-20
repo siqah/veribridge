@@ -13,6 +13,8 @@ export default function OrderDetail() {
   const [status, setStatus] = useState('');
   const [adminNotes, setAdminNotes] = useState('');
   const [registrationNumber, setRegistrationNumber] = useState('');
+  const [certificateFile, setCertificateFile] = useState(null);
+  const [isUploading, setIsUploading] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
   
   const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3001';
@@ -96,6 +98,39 @@ export default function OrderDetail() {
         console.error('Send email error:', error);
         alert('Failed to send email to customer');
       }
+    }
+  };
+
+  const handleUploadCertificate = async () => {
+    if (!certificateFile) {
+      alert('Please select a PDF file first');
+      return;
+    }
+
+    setIsUploading(true);
+    try {
+      const formData = new FormData();
+      formData.append('certificate', certificateFile);
+
+      const response = await fetch(`${API_URL}/api/formation/${id}/upload-certificate`, {
+        method: 'POST',
+        body: formData,
+      });
+
+      const data = await response.json();
+
+      if (data.success) {
+        alert('✅ Certificate uploaded successfully!');
+        setCertificateFile(null);
+        loadOrder(); // Reload to show new certificate
+      } else {
+        alert(`Error: ${data.error}`);
+      }
+    } catch (error) {
+      console.error('Upload error:', error);
+      alert('Failed to upload certificate');
+    } finally {
+      setIsUploading(false);
     }
   };
 
@@ -298,27 +333,34 @@ export default function OrderDetail() {
               </div>
 
               <div>
-                <label className="label">Certificate URL</label>
-                <input
-                  type="url"
-                  value={order.certificate_url || ''}
-                  placeholder="Paste certificate URL here"
-                  className="input-field"
-                  disabled
-                />
-                <p className="text-xs text-gray-500 mt-1">
-                  📁 Upload certificate to cloud storage, then add URL to status update
-                </p>
-                {order.certificate_url && (
-                  <a
-                    href={order.certificate_url}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="text-sm text-blue-400 hover:underline mt-2 inline-block"
+                <label className="label">Upload Certificate</label>
+                <div className="space-y-2">
+                  <input
+                    type="file"
+                    accept=".pdf"
+                    onChange={(e) => setCertificateFile(e.target.files[0])}
+                    className="input-field text-sm"
+                    id="certificate-upload"
+                  />
+                  <button
+                    onClick={handleUploadCertificate}
+                    disabled={!certificateFile || isUploading}
+                    className="btn-secondary w-full disabled:opacity-50"
                   >
-                    View Current Certificate →
-                  </a>
-                )}
+                    <Upload className="w-4 h-4 mr-2" />
+                    {isUploading ? 'Uploading...' : 'Upload Certificate PDF'}
+                  </button>
+                  {order.certificate_url && (
+                    <a
+                      href={order.certificate_url}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="text-sm text-green-400 hover:underline block"
+                    >
+                      ✓ Certificate uploaded - View →
+                    </a>
+                  )}
+                </div>
               </div>
 
               <div>
