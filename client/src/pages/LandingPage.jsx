@@ -22,12 +22,20 @@ export default function LandingPage() {
     return () => window.removeEventListener('scroll', handleScroll);
   }, []);
 
+  // Scroll to features section
+  const scrollToFeatures = () => {
+    const featuresSection = document.getElementById('features');
+    if (featuresSection) {
+      featuresSection.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }
+  };
+
   const features = [
     {
       title: 'Address Verification',
       description: 'Stop getting rejected. Convert "Near Mosque" into a format Google accepts.',
       icon: MapPin,
-      href: '/address-builder',
+      href: '/address-verification',
       badge: 'FREE'
     },
     {
@@ -84,7 +92,7 @@ export default function LandingPage() {
         
         {/* Desktop Menu */}
         <div className="hidden md:flex items-center gap-8">
-          <button onClick={() => navigate('/address-builder')} className="text-slate-600 hover:text-slate-900 text-sm transition-colors">Product</button>
+          <button onClick={scrollToFeatures} className="text-slate-600 hover:text-slate-900 text-sm transition-colors">Product</button>
           <button onClick={() => navigate('/login')} className="text-slate-600 hover:text-slate-900 text-sm transition-colors">Log In</button>
           <button onClick={() => navigate('/signup')} className="bg-emerald-600 text-white hover:bg-emerald-500 px-6 py-2.5 rounded-full font-medium text-sm transition-all">Get Started</button>
         </div>
@@ -170,7 +178,7 @@ export default function LandingPage() {
             Start Your UK Company
           </button>
           <button
-            onClick={() => navigate('/address-builder')}
+            onClick={() => navigate('/address-verification')}
             className="px-10 py-4 bg-transparent border-2 border-white/20 hover:border-white/40 text-white font-semibold rounded-full transition-all text-base"
           >
             Try Free Tools
@@ -184,7 +192,7 @@ export default function LandingPage() {
       </div>
 
       {/* Features Section */}
-      <section className="relative z-10 py-20 px-4">
+      <section id="features" className="relative z-10 py-20 px-4">
         <div className="max-w-5xl mx-auto">
           <div className="text-center mb-16">
             <h2 className="font-serif text-5xl md:text-6xl font-bold text-white mb-4 tracking-tight">Everything You Need<br />to Go Global</h2>

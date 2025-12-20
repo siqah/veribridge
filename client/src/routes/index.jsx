@@ -43,6 +43,7 @@ export const authRoutes = [
 export const standaloneRoutes = [
   { path: '/', element: LandingPage, public: true },
   { path: '/demo', element: DemoPage, public: true },
+  { path: '/address-verification', element: AddressBuilder, public: true },
 ];
 
 // Routes that use AppLayout
@@ -52,10 +53,8 @@ export const appLayoutRoutes = {
     { path: 'dashboard', element: Dashboard, protected: true },
   ],
   
-  // Verification Tools (public)
-  verification: [
-    { path: 'address-builder', element: AddressBuilder },
-  ],
+  // Verification Tools - moved to standalone routes
+  verification: [],
   
   // Business Services (protected)
   business: [

@@ -399,11 +399,11 @@ export default function AddressBuilder() {
                       UK Company Formation
                     </h4>
                     <p className="text-xs text-gray-400 mb-2">
-                      Unlock Stripe & PayPal payments worldwide
+                      Unlock Stripe & Wise payments worldwide
                     </p>
                     <div className="flex items-center justify-between">
-                      <span className="text-xs font-bold text-purple-400">KES 5,000</span>
-                      <span className="text-xs text-gray-500">5-10 days</span>
+                      <span className="text-sm font-bold text-purple-400">KES 25,000</span>
+                      <span className="text-xs text-gray-500">48 hours</span>
                     </div>
                   </div>
                 </div>
