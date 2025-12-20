@@ -32,6 +32,16 @@ export default {
           500: "#f59e0b",
           600: "#d97706",
         },
+        // Dark green theme for eden.so style
+        forest: {
+          950: "#0d2818",
+          900: "#1a3a32",
+          800: "#204d3f",
+        },
+      },
+      fontFamily: {
+        sans: ["Inter", "system-ui", "sans-serif"],
+        serif: ["Playfair Display", "Georgia", "serif"],
       },
       letterSpacing: {
         tight: "-0.02em",
