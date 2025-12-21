@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { ArrowLeft, Save, Upload, Building, User, MapPin, Calendar, FileText, Shield } from 'lucide-react';
 import CopyField from './components/CopyField';
+import AdminMailUpload from '../../components/admin/AdminMailUpload';
 
 const STATUS_OPTIONS = ['DRAFT', 'PENDING', 'PAID', 'PROCESSING', 'COMPLETED', 'REJECTED'];
 

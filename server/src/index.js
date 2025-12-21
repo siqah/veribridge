@@ -13,11 +13,13 @@ import servicesRoutes from "./routes/services.js";
 import authRoutes from "./routes/auth.js";
 // Freelancer OS Routes
 import companyOrdersRoutes from "./routes/companyOrders.js";
-import formationRoutes from "./routes/formation.js"; 
+import formationRoutes from "./routes/formation.js";
 import invoicesRoutes from "./routes/invoices.js";
 import mailboxRoutes from "./routes/mailbox.js";
 import apiKeysRoutes from "./routes/apiKeys.js";
 import addressApiRoutes from "./routes/addressApi.js";
+import uploadRoutes from "./routes/upload.js";
+import usersRoutes from "./routes/users.js";
 
 const app = express();
 const PORT = process.env.PORT || 3001;
@@ -63,6 +65,8 @@ app.use("/api/invoices", invoicesRoutes);
 app.use("/api/mailbox", mailboxRoutes);
 app.use("/api/keys", apiKeysRoutes);
 app.use("/api/v1", addressApiRoutes); // B2B API
+app.use("/api/upload", uploadRoutes); // File uploads
+app.use("/api/users", usersRoutes); // User management
 
 // Public verification page (for QR codes)
 app.get("/verify/:id", async (req, res) => {

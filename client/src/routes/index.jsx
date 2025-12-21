@@ -6,10 +6,13 @@ import DemoPage from '../pages/DemoPage';
 // Verification Pages
 import AddressBuilder from '../pages/verification/AddressBuilder';
 
+// Standalone Pages
+import MailboxInfo from '../pages/standalone/MailboxInfo';
+
 // Business Pages
 import CompanyFormation from '../pages/business/CompanyFormation';
 import Invoicing from '../pages/business/Invoicing';
-import Mailbox from '../pages/business/Mailbox';
+import DigitalMailbox from '../pages/business/DigitalMailbox';
 import MailboxSubscription from '../pages/business/MailboxSubscription';
 import ApiKeys from '../pages/business/ApiKeys';
 import MyOrders from '../pages/business/MyOrders';
@@ -17,6 +20,7 @@ import MyOrders from '../pages/business/MyOrders';
 // Admin Pages
 import FormationOrders from '../pages/admin/FormationOrders';
 import OrderDetail from '../pages/admin/OrderDetail';
+import MailManagement from '../pages/admin/MailManagement';
 
 // Auth Pages
 import Login from '../pages/auth/Login';
@@ -24,6 +28,7 @@ import Signup from '../pages/auth/Signup';
 import VerifyEmail from '../pages/auth/VerifyEmail';
 import ForgotPassword from '../pages/auth/ForgotPassword';
 import ResetPassword from '../pages/auth/ResetPassword';
+import AdminLogin from '../pages/auth/AdminLogin';
 import { ProtectedRoute, AdminRoute } from '../pages/auth/ProtectedRoute';
 
 // Legal Pages
@@ -37,6 +42,7 @@ export const authRoutes = [
   { path: '/verify-email', element: VerifyEmail },
   { path: '/forgot-password', element: ForgotPassword },
   { path: '/reset-password', element: ResetPassword },
+  { path: '/admin/login', element: AdminLogin },
 ];
 
 // Standalone routes (no AppLayout)
@@ -44,6 +50,7 @@ export const standaloneRoutes = [
   { path: '/', element: LandingPage, public: true },
   { path: '/demo', element: DemoPage, public: true },
   { path: '/address-verification', element: AddressBuilder, public: true },
+  { path: '/mailbox-info', element: MailboxInfo, public: true },
 ];
 
 // Routes that use AppLayout
@@ -61,7 +68,7 @@ export const appLayoutRoutes = {
     { path: 'my-orders', element: MyOrders, protected: true },
     { path: 'company-formation', element: CompanyFormation, protected: true },
     { path: 'invoicing', element: Invoicing, protected: true },
-    { path: 'mailbox', element: Mailbox, protected: true },
+    { path: 'mailbox', element: DigitalMailbox, protected: true },
     { path: 'mailbox/subscribe', element: MailboxSubscription, protected: true },
     { path: 'api-keys', element: ApiKeys, protected: true },
   ],
@@ -70,6 +77,7 @@ export const appLayoutRoutes = {
   admin: [
     { path: 'admin', element: FormationOrders, admin: true },
     { path: 'admin/order/:id', element: OrderDetail, admin: true },
+    { path: 'admin/mail', element: MailManagement, admin: true },
   ],
   
   // Legal (public)

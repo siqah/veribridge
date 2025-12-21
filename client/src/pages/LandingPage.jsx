@@ -49,7 +49,7 @@ export default function LandingPage() {
       title: 'Digital Mailbox',
       description: 'A real London street address for your business mail and returns.',
       icon: Mail,
-      href: '/mailbox',
+      href: '/mailbox-info',
       badge: 'New'
     },
     {

@@ -42,7 +42,8 @@ export function AdminRoute({ children }) {
   }
 
   if (!user) {
-    return <Navigate to="/login" state={{ from: location }} replace />;
+    // Redirect to admin login page (not regular login)
+    return <Navigate to="/admin/login" state={{ from: location }} replace />;
   }
 
   // Check if user is admin
