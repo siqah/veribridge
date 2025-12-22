@@ -1,0 +1,39 @@
+{
+    "name": "veribridge-server",
+    "version": "1.0.0",
+    "description": "VeriBridge Backend API - Address Verification Services",
+    "main": "src/index.js",
+    "type": "module",
+    "scripts": {
+        "start": "node src/index.js",
+        "dev": "nodemon src/index.js",
+        "db:migrate": "node src/db/migrate.js",
+        "prisma:generate": "prisma generate",
+        "prisma:migrate": "prisma migrate dev",
+        "prisma:studio": "prisma studio",
+        "prisma:push": "prisma db push"
+    },
+    "dependencies": {
+        "@prisma/client": "^5.8.0",
+        "@supabase/supabase-js": "^2.89.0",
+        "axios": "^1.6.2",
+        "bcryptjs": "^2.4.3",
+        "better-sqlite3": "^9.2.2",
+        "cors": "^2.8.5",
+        "dotenv": "^16.3.1",
+        "express": "^4.18.2",
+        "helmet": "^7.1.0",
+        "jsonwebtoken": "^9.0.2",
+        "morgan": "^1.10.0",
+        "multer": "^1.4.5-lts.1",
+        "nodemailer": "^6.9.7",
+        "pg": "^8.11.3",
+        "puppeteer": "^21.6.0",
+        "qrcode": "^1.5.3",
+        "uuid": "^9.0.0"
+    },
+    "devDependencies": {
+        "nodemon": "^3.0.2",
+        "prisma": "^5.8.0"
+    }
+}

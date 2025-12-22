@@ -1,157 +1,213 @@
 # VeriBridge
 
-> **Address Verification for Developers in the Global South**
+> Global Address Verification Platform for Developers
 
-VeriBridge helps freelance developers in Kenya (and expanding to other Global South countries) format their addresses correctly for international platforms like Google Play Console, Amazon, and other global services that reject P.O. Box addresses and colloquial location descriptions.
+[![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](https://opensource.org/licenses/MIT)
+[![Node](https://img.shields.io/badge/node-%3E%3D18.0.0-brightgreen)](https://nodejs.org)
 
-## 🎯 Problem Statement
+VeriBridge helps developers worldwide pass address verification for Google Play Console, Amazon, PayPal, Stripe, and 50+ platforms by providing professionally formatted addresses and verification documents.
 
-Developers get banned from global platforms because:
+## 🚀 Features
 
-- National IDs show only District/Location (no physical addresses)
-- Bank statements default to "P.O. Box" addresses
-- Global AI models reject non-residential addresses
-- Informal address descriptions ("Near Naivas", "Opposite KFC") are not accepted
-
-VeriBridge bridges this compliance gap.
-
-## ✨ Features
-
-### Module 1: Address Architect
-
-- 🗺️ **OpenStreetMap Integration** (No API key required!)
-- 🔍 Real-time address search with autocomplete dropdown
-- ✍️ Manual address input with smart formatting
-- 🧹 Automatic removal of colloquialisms ("Near", "Opposite", etc.)
-- ✅ Real-time validation with color-coded feedback
-- 📋 Structured output: `[Building], [Street], [Area], [City], [Postal Code]`
-
-### Module 2: Bank Instruction Generator
-
-- 🏦 Support for major Kenyan banks (Equity, KCB, Co-op, NCBA)
-- 📄 Professional PDF generation with jsPDF
-- 📝 Clear instructions for bank tellers
-- ⚠️ Warning labels about P.O. Box usage
-- 💼 Enterprise-grade document design
-
-### Module 3: Pre-Flight Validator (Coming Soon)
-
-- 📸 Bank statement upload and OCR scanning
-- 🔍 P.O. Box detection in documents
-- ✓ Compliance verification before submission
-
-## 🚀 Quick Start
-
-### Prerequisites
-
-- Node.js 18+ and npm
-- **No API keys required!** OpenStreetMap is free and open source
-
-### Installation
-
-```bash
-# Clone or navigate to the project directory
-cd veribridge
-
-# Install dependencies
-npm install
-
-# Start development server
-npm run dev
-```
-
-Visit `http://localhost:5173` to see the application.
-
-## 🛠️ Tech Stack
-
-- **Frontend**: React 19 + Vite
-- **Styling**: Tailwind CSS 3.4
-- **State**: Zustand
-- **PDF**: jsPDF
-- **Maps**: OpenStreetMap Nominatim API (free, no API key required)
-- **Icons**: Lucide React
+- **Address Architect** - Format addresses for 35+ countries with international compliance
+- **Pre-Flight Verification** - 4-layer validation system (P.O. Box detection, document OCR, identity checks)
+- **Verification Package** - Generate Certificate + Affidavit + Cover Letter with QR codes
+- **MPESA Payments** - Integrated payment system for premium services
+- **Upsell Services** - UK company formation, virtual mailbox, invoice generator, B2B API
 
 ## 📁 Project Structure
 
 ```
-src/
-├── components/
-│   ├── AddressBuilder.jsx          # Module 1: Address input & formatting
-│   └── BankCardGenerator.jsx       # Module 2: PDF generation
-├── utils/
-│   ├── addressLogic.js             # Address formatting & validation
-│   └── pdfTemplates.js             # PDF template generation
-├── store/
-│   └── addressStore.js             # Zustand state management
-├── App.jsx                         # Main application
-└── index.css                       # Tailwind CSS configuration
+veribridge/
+├── client/              # React + Vite Frontend
+│   ├── src/
+│   │   ├── components/  # React components
+│   │   ├── utils/       # PDF generation, verification
+│   │   ├── store/       # Zustand state management
+│   │   └── services/    # API client
+│   └── package.json
+│
+├── server/              # Express.js Backend
+│   ├── src/
+│   │   ├── routes/      # API endpoints
+│   │   ├── services/    # Business logic
+│   │   └── db/          # PostgreSQL schema
+│   └── package.json
+│
+├── shared/              # Shared utilities
+└── docker-compose.yml   # PostgreSQL + Redis
 ```
 
-## 🎨 Design Philosophy
+## 🛠️ Quick Start
 
-- **Mobile-First**: Large touch targets, responsive design
-- **Privacy-Focused**: All processing happens in your browser (no server uploads)
-- **Enterprise Theme**: Professional blue/white/slate color palette
-- **Accessible**: Semantic HTML, proper contrast, keyboard navigable
+### Prerequisites
 
-## 📝 Usage Guide
+- Node.js >= 18.0.0
+- npm >= 9.0.0
 
-### Step 1: Build Your Address
+### Installation
 
-1. Optionally search for a location using OpenStreetMap autocomplete
-2. Fill in the address fields:
-   - Building/Landmark name
-   - Street name
-   - Area/Estate
-   - City
-   - Postal code
-3. Review the formatted address preview
-4. Ensure validation shows ✅ (green checkmark)
+```bash
+# Install all dependencies (both client and server)
+npm install
 
-### Step 2: Generate Bank Instructions
+# Or install separately
+cd client && npm install
+cd server && npm install
+```
 
-1. Select your bank from the dropdown
-2. Click "Generate Bank Instructions (PDF)"
-3. Print or save the PDF to your phone
+### Development
 
-### Step 3: Visit Your Bank
+```bash
+# Run both frontend and backend
+npm run dev
 
-1. Present the PDF to the bank teller
-2. Request they update your address EXACTLY as shown
-3. Ask for a 1-page interim statement with the new address
-4. Use that statement for platform verification
+# Or run separately
+npm run dev:client  # Frontend on http://localhost:5173
+npm run dev:server  # Backend on http://localhost:3001
+```
 
-## 🔒 Privacy & Security
+### Environment Variables
 
-- ✅ **100% Client-Side Processing**: No data sent to any server
-- ✅ **No Storage**: Nothing is saved or cached
-- ✅ **No Tracking**: No analytics or tracking scripts
-- ✅ **Open Source**: Review the code yourself
+**Server** (`server/.env`):
+
+```env
+PORT=3001
+NODE_ENV=development
+BASE_URL=http://localhost:3001
+CLIENT_URL=http://localhost:5173
+
+# MPESA (optional - demo mode works without)
+MPESA_CONSUMER_KEY=
+MPESA_CONSUMER_SECRET=
+MPESA_ENV=sandbox
+```
+
+**Client** (`client/.env`) - Optional:
+
+```env
+VITE_API_URL=http://localhost:3001
+```
+
+## 🐳 Docker Setup
+
+```bash
+# Start PostgreSQL + Redis
+docker-compose up -d
+
+# View logs
+docker-compose logs -f
+
+# Stop services
+docker-compose down
+```
+
+## 🌐 API Endpoints
+
+### Verification
+
+- `POST /api/verify/create` - Create verification record
+- `GET /api/verify/:id` - Public verification lookup
+- `GET /verify/:id` - Public verification page (HTML)
+
+### Payments
+
+- `POST /api/payments/stk-push` - Initiate MPESA payment
+- `POST /api/payments/callback` - MPESA webhook
+- `GET /api/payments/:id` - Check payment status
+
+### Services
+
+- `GET /api/services` - List all upsell services
+- `POST /api/services/:id/interest` - Register service interest
+- `POST /api/services/address-api/clean` - Clean address (B2B)
+
+## 📦 Build
+
+```bash
+# Build frontend for production
+npm run build
+
+# Preview production build
+cd client && npm run preview
+```
+
+## 🚢 Deployment
+
+### Frontend (Vercel/Netlify)
+
+```bash
+cd client
+npm run build
+# Deploy dist/ folder
+```
+
+### Backend (Railway/Render)
+
+```bash
+cd server
+# Configure environment variables
+# Deploy from server/ directory
+```
+
+## 🛡️ Services & Pricing
+
+| Service               | Price (KES) | Description                             |
+| --------------------- | ----------- | --------------------------------------- |
+| Basic Verification    | Free        | Address formatting + Affidavit template |
+| Premium Verification  | 500         | QR code + Online verification           |
+| UK Company Formation  | 5,000       | Stripe/PayPal access setup              |
+| Virtual Mailbox       | 500/month   | Permanent business address              |
+| Invoice Generator Pro | 200/month   | Professional invoices                   |
+
+## 🧪 Testing
+
+```bash
+# Health check
+curl http://localhost:3001/health
+
+# Create verification
+curl -X POST http://localhost:3001/api/verify/create \
+  -H "Content-Type: application/json" \
+  -d '{"fullName":"John Doe","formattedAddress":"123 Main St, Nairobi, Kenya"}'
+
+# List services
+curl http://localhost:3001/api/services
+```
+
+## 📚 Tech Stack
+
+**Frontend:**
+
+- React 18
+- Vite
+- Zustand (state management)
+- Tailwind CSS
+- jsPDF (PDF generation)
+- QRCode, Tesseract.js
+
+**Backend:**
+
+- Express.js
+- PostgreSQL (planned)
+- JWT authentication
+- MPESA Daraja API
+- QRCode generation
 
 ## 🤝 Contributing
 
-Contributions are welcome! This project aims to help developers across the Global South navigate compliance challenges.
+This is a private project. For questions, contact the development team.
 
 ## 📄 License
 
-MIT License - Feel free to use, modify, and distribute.
+MIT License - see LICENSE file for details
 
-## 🌍 Roadmap
+## 📞 Support
 
-- [ ] Expand to more African countries (Nigeria, Ghana, South Africa)
-- [ ] Add more bank templates
-- [ ] Implement Module 3 (OCR Validator)
-- [ ] Add language support (Swahili, French, Portuguese)
-- [ ] Mobile app version
-
-## 💬 Support
-
-If you encounter issues or have questions:
-
-1. Check that you're using Node.js 18+
-2. Ensure Tailwind CSS 3.x is installed (not v4)
-3. Clear browser cache and restart the dev server
+- Documentation: See `PROJECT_SPECIFICATION.md`
+- Issues: Contact development team
+- Email: support@veribridge.co.ke
 
 ---
 
-**Built with ❤️ for developers navigating international compliance challenges**
+Built with ❤️ for developers worldwide
