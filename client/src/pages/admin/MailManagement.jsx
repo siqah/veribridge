@@ -193,7 +193,7 @@ export default function MailManagement() {
               </div>
 
               <AdminMailUpload 
-                userId={selectedUser?.id}
+                userId={selectedUser?.supabaseId}
                 onSuccess={handleUploadSuccess}
               />
 

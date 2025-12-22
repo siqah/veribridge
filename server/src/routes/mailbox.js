@@ -74,7 +74,7 @@ router.post("/upload", authenticateToken, async (req, res) => {
         title,
         sender,
         file_url,
-        created_by: req.user.userId,
+        // created_by omitted - will be null (admin uses local auth, not Supabase Auth)
       })
       .select()
       .single();

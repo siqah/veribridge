@@ -15,7 +15,7 @@ create table if not exists mailbox_items (
   
   -- Audit
   created_at timestamp with time zone default now(),
-  created_by uuid references auth.users -- Admin who uploaded it
+  created_by uuid references auth.users default null -- Admin who uploaded it (nullable for admins not in Supabase Auth)
 );
 
 -- Add index for faster user queries

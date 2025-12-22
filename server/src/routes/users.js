@@ -16,6 +16,7 @@ router.get("/", authenticateToken, async (req, res) => {
     const users = await prisma.user.findMany({
       select: {
         id: true,
+        supabaseId: true, // Add Supabase ID for mailbox foreign key
         email: true,
         fullName: true,
         createdAt: true,
