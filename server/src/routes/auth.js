@@ -4,6 +4,7 @@ import jwt from "jsonwebtoken";
 import crypto from "crypto";
 import prisma from "../db/prisma.js";
 import logger from "../utils/logger.js";
+import cache from "../utils/cache.js";
 import {
   sendVerificationEmail,
   sendPasswordResetEmail,
@@ -103,6 +104,72 @@ router.post("/signup", async (req, res) => {
   } catch (error) {
     console.error("Signup error:", error);
     res.status(500).json({ error: "Failed to create account" });
+  }
+});
+
+/**
+ * POST /api/auth/admin/login
+ * Admin login (local authentication, not Supabase)
+ */
+router.post("/admin/login", async (req, res) => {
+  try {
+    const { email, password } = req.body;
+
+    // Validate inputs
+    if (!email || !password) {
+      return res.status(400).json({ error: "Email and password required" });
+    }
+
+    // Verify this is the admin email
+    const ADMIN_EMAIL = process.env.ADMIN_EMAIL || "admin@veribridge.co.ke";
+    if (email !== ADMIN_EMAIL) {
+      return res.status(403).json({ error: "Unauthorized: Admin access only" });
+    }
+
+    // Find user in database
+    const user = await prisma.user.findUnique({
+      where: { email },
+    });
+
+    if (!user) {
+      return res.status(401).json({ error: "Invalid credentials" });
+    }
+
+    // Verify password
+    const validPassword = await bcrypt.compare(password, user.passwordHash);
+
+    if (!validPassword) {
+      return res.status(401).json({ error: "Invalid credentials" });
+    }
+
+    // Update last login
+    await prisma.user.update({
+      where: { id: user.id },
+      data: { lastLogin: new Date() },
+    });
+
+    // Generate JWT
+    const token = jwt.sign(
+      { userId: user.id, email: user.email, isAdmin: true },
+      JWT_SECRET,
+      { expiresIn: JWT_EXPIRES_IN }
+    );
+
+    logger.success(`Admin login: ${email}`);
+
+    res.json({
+      success: true,
+      message: "Admin login successful",
+      token,
+      user: {
+        id: user.id,
+        email: user.email,
+        fullName: user.fullName,
+      },
+    });
+  } catch (error) {
+    console.error("Admin login error:", error);
+    res.status(500).json({ error: "Login failed" });
   }
 });
 
@@ -487,26 +554,56 @@ export function authenticateToken(req, res, next) {
         // Supabase JWT validated successfully
         // Extract user ID from Supabase JWT (sub field)
         const supabaseUserId = decoded.sub;
+        const userCacheKey = `user:supabase:${supabaseUserId}`;
 
         // Find or create user in our database using Supabase ID
         try {
-          let user = await prisma.user.findUnique({
-            where: { supabaseId: supabaseUserId },
-            select: { id: true, email: true },
-          });
+          // Check cache first
+          let user = cache.get(userCacheKey);
 
-          // If user doesn't exist, create from Supabase data
           if (!user) {
-            user = await prisma.user.create({
-              data: {
-                supabaseId: supabaseUserId,
-                email: decoded.email,
-                passwordHash: "SUPABASE_AUTH", // Dummy hash - user authenticates via Supabase
-                fullName: decoded.user_metadata?.full_name || null,
-                emailVerified: decoded.email_confirmed_at ? true : false,
-              },
+            // Cache miss - query database
+            user = await prisma.user.findUnique({
+              where: { supabaseId: supabaseUserId },
               select: { id: true, email: true },
             });
+
+            // If user doesn't exist by supabaseId, check by email
+            if (!user) {
+              // Try to find user by email (they might have signed up before)
+              user = await prisma.user.findUnique({
+                where: { email: decoded.email },
+                select: { id: true, email: true, supabaseId: true },
+              });
+
+              if (user) {
+                // User exists but doesn't have supabaseId set - update it
+                user = await prisma.user.update({
+                  where: { id: user.id },
+                  data: {
+                    supabaseId: supabaseUserId,
+                    emailVerified: decoded.email_confirmed_at ? true : false,
+                    fullName: decoded.user_metadata?.full_name || undefined,
+                  },
+                  select: { id: true, email: true },
+                });
+              } else {
+                // User doesn't exist at all - create new
+                user = await prisma.user.create({
+                  data: {
+                    supabaseId: supabaseUserId,
+                    email: decoded.email,
+                    passwordHash: "SUPABASE_AUTH", // Dummy hash - user authenticates via Supabase
+                    fullName: decoded.user_metadata?.full_name || null,
+                    emailVerified: decoded.email_confirmed_at ? true : false,
+                  },
+                  select: { id: true, email: true },
+                });
+              }
+            }
+
+            // Cache user for 5 minutes
+            cache.set(userCacheKey, user, 300000);
           }
 
           req.user = { userId: user.id, email: user.email };

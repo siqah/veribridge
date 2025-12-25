@@ -25,33 +25,29 @@ export function ProtectedRoute({ children }) {
   return children;
 }
 
-// Admin route - requires authentication AND admin role
+// Admin Route - requires authentication AND admin email
 export function AdminRoute({ children }) {
   const { user, loading } = useAuth();
   const location = useLocation();
+  
+  const ADMIN_EMAIL = 'faruoqmuhammed@gmail.com';
 
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900">
+      <div className="min-h-screen flex items-center justify-center">
         <div className="text-center">
-          <div className="w-16 h-16 border-4 border-purple-500 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
-          <p className="text-white text-lg">Verifying admin access...</p>
+          <div className="w-16 h-16 border-4 border-blue-500 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
+          <p className="text-gray-600">Loading...</p>
         </div>
       </div>
     );
   }
 
   if (!user) {
-    // Redirect to admin login page (not regular login)
     return <Navigate to="/admin/login" state={{ from: location }} replace />;
   }
 
-  // Check if user is admin
-  // Admin check: either has 'admin' role in metadata OR is the owner email
-  const isAdmin = user?.user_metadata?.role === 'admin' || user?.email === 'faruoqmuhammed@gmail.com';
-
-  if (!isAdmin) {
-    // Redirect to home if not admin
+  if (user.email !== ADMIN_EMAIL) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-slate-900 via-red-900 to-slate-900">
         <div className="max-w-md text-center p-8 backdrop-blur-xl bg-white/10 border border-white/20 rounded-2xl">

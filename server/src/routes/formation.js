@@ -6,6 +6,7 @@ import companiesHouseService from "../services/companiesHouse.js";
 import { authenticateToken } from "./auth.js";
 import { logFormationAlert } from "../utils/formationEmail.js";
 import { uploadToSupabase } from "../config/supabase.js";
+import cache from "../utils/cache.js";
 
 const router = express.Router();
 
@@ -167,13 +168,35 @@ router.get("/", async (req, res) => {
 router.get("/my-orders", authenticateToken, async (req, res) => {
   try {
     const userId = req.user.userId;
+    const cacheKey = `formation:orders:${userId}`;
 
+    // Check cache first
+    const cached = cache.get(cacheKey);
+    if (cached) {
+      return res.json(cached);
+    }
+
+    // Only select fields needed for the frontend
     const orders = await prisma.companyOrder.findMany({
       where: { userId },
       orderBy: { createdAt: "desc" },
+      select: {
+        id: true,
+        companyName: true,
+        jurisdiction: true,
+        companyType: true,
+        status: true,
+        paymentAmount: true,
+        registrationNumber: true,
+        certificateUrl: true,
+        adminNotes: true,
+        createdAt: true,
+        updatedAt: true,
+        completedAt: true,
+      },
     });
 
-    res.json({
+    const response = {
       success: true,
       orders: orders.map((order) => ({
         id: order.id,
@@ -189,7 +212,12 @@ router.get("/my-orders", authenticateToken, async (req, res) => {
         updated_at: order.updatedAt,
         completed_at: order.completedAt,
       })),
-    });
+    };
+
+    // Cache for 1 minute (orders don't change frequently)
+    cache.set(cacheKey, response, 60000);
+
+    res.json(response);
   } catch (error) {
     console.error("User orders fetch error:", error);
     res.status(500).json({ error: "Failed to fetch orders" });
@@ -436,6 +464,9 @@ router.patch("/:id/status", async (req, res) => {
       data: updateData,
     });
 
+    // Invalidate cache for this user's orders
+    cache.del(`formation:orders:${formation.userId}`);
+
     // Log audit
     await prisma.formationAuditLog.create({
       data: {
@@ -547,6 +578,9 @@ router.post(
         where: { id },
         data: { certificateUrl: publicUrl },
       });
+
+      // Invalidate cache for this user's orders
+      cache.del(`formation:orders:${order.userId}`);
 
       console.log(
         `📄 Certificate uploaded to Supabase for order ${id.slice(0, 8)}`

@@ -3,6 +3,8 @@ import { useNavigate, useLocation } from 'react-router-dom';
 import { Shield, Mail, Lock, AlertCircle, ArrowLeft } from 'lucide-react';
 import { useAuth } from '../../contexts/AuthContext';
 
+const ADMIN_EMAIL = 'faruoqmuhammed@gmail.com'; // Update this to your admin email
+
 export default function AdminLogin() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -14,7 +16,7 @@ export default function AdminLogin() {
   const location = useLocation();
   
   // Get the redirect path or default to /admin
-  const from = location.state?.from?.pathname || '/admin';
+  const from = location.state?.from?.pathname || '/admin/dashboard';
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -22,18 +24,19 @@ export default function AdminLogin() {
     setLoading(true);
 
     try {
-      // Login via existing auth system
+      // Verify this is the admin email BEFORE attempting login
+      if (email !== ADMIN_EMAIL) {
+        throw new Error('Unauthorized: Admin access only');
+      }
+
+      // Login via Supabase Auth
       await login(email, password);
       
-      // Verify this is the admin email
-      if (email === 'faruoqmuhammed@gmail.com') {
-        navigate(from, { replace: true });
-      } else {
-        setError('Unauthorized: Admin access only');
-        setLoading(false);
-      }
+      // If successful, redirect to admin area
+      navigate(from, { replace: true });
     } catch (err) {
-      setError(err.response?.data?.error || 'Invalid credentials');
+      setError(err.message || 'Invalid credentials');
+    } finally {
       setLoading(false);
     }
   };

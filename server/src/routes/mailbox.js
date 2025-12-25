@@ -1,6 +1,7 @@
 import express from "express";
 import { createClient } from "@supabase/supabase-js";
 import { authenticateToken } from "./auth.js";
+import cache from "../utils/cache.js";
 
 const router = express.Router();
 
@@ -9,18 +10,36 @@ const supabase = createClient(
   process.env.SUPABASE_SERVICE_KEY // Use service key for admin operations
 );
 
-// GET /api/mailbox - Get all mail for authenticated user
+// GET /api/mailbox - Get all mail for authenticated user (with caching)
 router.get("/", authenticateToken, async (req, res) => {
   try {
+    const userId = req.user.userId;
+    const cacheKey = `mailbox:${userId}`;
+
+    // Check cache first
+    const cached = cache.get(cacheKey);
+    if (cached) {
+      return res.json(cached);
+    }
+
+    // Only select needed fields to reduce data transfer
     const { data, error } = await supabase
       .from("mailbox_items")
-      .select("*")
-      .eq("user_id", req.user.userId)
-      .order("received_at", { ascending: false });
+      .select(
+        "id, user_id, order_id, title, sender, file_url, received_at, is_read"
+      )
+      .eq("user_id", userId)
+      .order("received_at", { ascending: false })
+      .limit(100); // Add limit to prevent loading too much data
 
     if (error) throw error;
 
-    res.json({ success: true, items: data });
+    const response = { success: true, items: data || [] };
+
+    // Cache for 30 seconds
+    cache.set(cacheKey, response, 30000);
+
+    res.json(response);
   } catch (error) {
     console.error("Error fetching mailbox:", error);
     res.status(500).json({ error: "Failed to fetch mailbox items" });
@@ -31,16 +50,20 @@ router.get("/", authenticateToken, async (req, res) => {
 router.patch("/:id/read", authenticateToken, async (req, res) => {
   try {
     const { id } = req.params;
+    const userId = req.user.userId;
 
     const { data, error } = await supabase
       .from("mailbox_items")
       .update({ is_read: true })
       .eq("id", id)
-      .eq("user_id", req.user.userId) // Ensure user owns this mail
+      .eq("user_id", userId) // Ensure user owns this mail
       .select()
       .single();
 
     if (error) throw error;
+
+    // Invalidate cache for this user
+    cache.del(`mailbox:${userId}`);
 
     res.json({ success: true, item: data });
   } catch (error) {
@@ -101,6 +124,9 @@ router.post("/upload", authenticateToken, async (req, res) => {
       // Don't fail upload if email notification fails
       console.error("Failed to send mail notification:", emailError);
     }
+
+    // Invalidate cache for the user who received mail
+    cache.del(`mailbox:${user_id}`);
 
     res.json({ success: true, item: data });
   } catch (error) {
