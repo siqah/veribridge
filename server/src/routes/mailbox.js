@@ -81,7 +81,26 @@ router.post("/upload", authenticateToken, async (req, res) => {
 
     if (error) throw error;
 
-    // TODO: Send email notification to user
+    // Send email notification to user
+    try {
+      // Get user's email from Supabase Auth
+      const { data: userData, error: userError } =
+        await supabase.auth.admin.getUserById(user_id);
+
+      if (!userError && userData?.user?.email) {
+        const { sendMailNotification } = await import(
+          "../services/emailService.js"
+        );
+        await sendMailNotification(userData.user.email, {
+          title,
+          sender,
+          receivedDate: data.received_at,
+        });
+      }
+    } catch (emailError) {
+      // Don't fail upload if email notification fails
+      console.error("Failed to send mail notification:", emailError);
+    }
 
     res.json({ success: true, item: data });
   } catch (error) {

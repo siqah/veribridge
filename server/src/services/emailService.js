@@ -1,4 +1,5 @@
 import nodemailer from "nodemailer";
+import logger from "../utils/logger.js";
 
 // Email transporter configuration
 const createTransporter = () => {
@@ -6,7 +7,7 @@ const createTransporter = () => {
   const smtpConfigured = process.env.SMTP_HOST && process.env.SMTP_USER;
 
   if (!smtpConfigured) {
-    console.warn("⚠️ SMTP not configured. Emails will be logged only.");
+    logger.warn("⚠️ SMTP not configured. Emails will be logged only.");
     return null;
   }
 
@@ -111,10 +112,10 @@ View Order: http://localhost:5173/admin-formations
 
   if (!transporter) {
     // Log email content if SMTP not configured
-    console.log("\n📧 ADMIN ALERT EMAIL (Not sent - SMTP not configured)");
-    console.log(`To: ${adminEmail}`);
-    console.log(`Subject: ${subject}`);
-    console.log(text);
+    logger.debug("\n📧 ADMIN ALERT EMAIL (Not sent - SMTP not configured)");
+    logger.debug(`To: ${adminEmail}`);
+    logger.debug(`Subject: ${subject}`);
+    logger.debug(text);
     return { success: true, demo: true };
   }
 
@@ -127,7 +128,7 @@ View Order: http://localhost:5173/admin-formations
       html,
     });
 
-    console.log(`✅ Admin alert email sent to ${adminEmail}`);
+    logger.success(`Admin alert email sent to ${adminEmail}`);
     return { success: true };
   } catch (error) {
     console.error("❌ Failed to send admin email:", error.message);
@@ -206,7 +207,7 @@ Need help? Email support@veribadge.co.ke
       html,
     });
 
-    console.log(`✅ Confirmation email sent to ${userEmail}`);
+    logger.success(`Confirmation email sent to ${userEmail}`);
     return { success: true };
   } catch (error) {
     console.error("❌ Failed to send confirmation email:", error.message);
@@ -259,7 +260,7 @@ export async function sendStatusUpdate(userEmail, status, companyName) {
       html,
     });
 
-    console.log(`✅ Status update email sent to ${userEmail}`);
+    logger.success(`Status update email sent to ${userEmail}`);
   } catch (error) {
     console.error("❌ Failed to send status update:", error.message);
   }
@@ -325,10 +326,10 @@ If you didn't create an account, you can safely ignore this email.
   `;
 
   if (!transporter) {
-    console.log("\n📧 VERIFICATION EMAIL (Not sent - SMTP not configured)");
-    console.log(`To: ${userEmail}`);
-    console.log(`Subject: ${subject}`);
-    console.log(text);
+    logger.debug("\n📧 VERIFICATION EMAIL (Not sent - SMTP not configured)");
+    logger.debug(`To: ${userEmail}`);
+    logger.debug(`Subject: ${subject}`);
+    logger.debug(text);
     return { success: true, demo: true };
   }
 
@@ -341,7 +342,7 @@ If you didn't create an account, you can safely ignore this email.
       html,
     });
 
-    console.log(`✅ Verification email sent to ${userEmail}`);
+    logger.success(`Verification email sent to ${userEmail}`);
     return { success: true };
   } catch (error) {
     console.error("❌ Failed to send verification email:", error.message);
@@ -406,10 +407,10 @@ If you didn't request a password reset, you can safely ignore this email.
   `;
 
   if (!transporter) {
-    console.log("\n📧 PASSWORD RESET EMAIL (Not sent - SMTP not configured)");
-    console.log(`To: ${userEmail}`);
-    console.log(`Subject: ${subject}`);
-    console.log(text);
+    logger.debug("\n📧 PASSWORD RESET EMAIL (Not sent - SMTP not configured)");
+    logger.debug(`To: ${userEmail}`);
+    logger.debug(`Subject: ${subject}`);
+    logger.debug(text);
     return { success: true, demo: true };
   }
 
@@ -422,10 +423,191 @@ If you didn't request a password reset, you can safely ignore this email.
       html,
     });
 
-    console.log(`✅ Password reset email sent to ${userEmail}`);
+    logger.success(`Password reset email sent to ${userEmail}`);
     return { success: true };
   } catch (error) {
     console.error("❌ Failed to send password reset email:", error.message);
+    throw error;
+  }
+}
+
+/**
+ * Send mail upload notification to user
+ */
+export async function sendMailNotification(userEmail, mailDetails) {
+  const transporter = createTransporter();
+
+  const { title, sender, receivedDate } = mailDetails;
+  const subject = `New Mail Received - ${title}`;
+
+  const html = `
+    <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
+      <h2 style="color: #2563eb;">📬 You've Got Mail!</h2>
+      
+      <p>A new mail item has been uploaded to your digital mailbox.</p>
+
+      <div style="background: #f0fdf4; padding: 20px; border-radius: 8px; margin: 20px 0; border-left: 4px solid #10b981;">
+        <p><strong>Title:</strong> ${title}</p>
+        <p><strong>Sender:</strong> ${sender || "Unknown"}</p>
+        <p><strong>Received:</strong> ${new Date(
+          receivedDate || Date.now()
+        ).toLocaleDateString()}</p>
+      </div>
+
+      <div style="text-align: center; margin: 30px 0;">
+        <a href="${
+          process.env.CLIENT_URL || "http://localhost:5173"
+        }/mailbox" style="display: inline-block; padding: 14px 28px; background: #2563eb; color: white; text-decoration: none; border-radius: 6px; font-weight: bold;">View Your Mailbox</a>
+      </div>
+
+      <p style="color: #6b7280; font-size: 14px; margin-top: 30px;">
+        This is an automated notification from VeriBridge Digital Mailbox.
+      </p>
+    </div>
+  `;
+
+  const text = `
+NEW MAIL RECEIVED
+
+You've got a new mail item in your digital mailbox!
+
+Title: ${title}
+Sender: ${sender || "Unknown"}
+Received: ${new Date(receivedDate || Date.now()).toLocaleDateString()}
+
+View your mailbox: ${process.env.CLIENT_URL || "http://localhost:5173"}/mailbox
+  `;
+
+  if (!transporter) {
+    logger.debug("\n📧 MAIL NOTIFICATION (Not sent - SMTP not configured)");
+    logger.debug(`To: ${userEmail}`);
+    logger.debug(`Subject: ${subject}`);
+    logger.debug(text);
+    return { success: true, demo: true };
+  }
+
+  try {
+    await transporter.sendMail({
+      from: `"VeriBridge Mailbox" <${process.env.SMTP_USER}>`,
+      to: userEmail,
+      subject,
+      text,
+      html,
+    });
+
+    logger.success(`Mail notification sent to ${userEmail}`);
+    return { success: true };
+  } catch (error) {
+    console.error("❌ Failed to send mail notification:", error.message);
+    throw error;
+  }
+}
+
+/**
+ * Send formation completion notification to user
+ */
+export async function sendFormationCompletionEmail(orderDetails) {
+  const transporter = createTransporter();
+
+  const { companyName, registrationNumber, certificateUrl, directorEmail } =
+    orderDetails;
+  const subject = `🎉 Your Company is Registered! - ${companyName}`;
+
+  const html = `
+    <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
+      <h2 style="color: #10b981;">🎉 Congratulations!</h2>
+      
+      <p>Your company formation is complete. Your business is now officially registered!</p>
+
+      <div style="background: #f0fdf4; padding: 20px; border-radius: 8px; margin: 20px 0; border-left: 4px solid #10b981;">
+        <p><strong>Company Name:</strong> ${companyName}</p>
+        <p><strong>Registration Number:</strong> <span style="color: #2563eb; font-weight: bold;">${registrationNumber}</span></p>
+        <p><strong>Status:</strong> <span style="color: #10b981;">✅ Registered</span></p>
+      </div>
+
+      <h3>Next Steps:</h3>
+      <ol style="line-height: 1.8;">
+        <li>Download your incorporation certificate from the dashboard</li>
+        <li>Set up your business bank account</li>
+        <li>Register for VAT if applicable</li>
+        <li>Open merchant accounts (Stripe, PayPal, etc.)</li>
+      </ol>
+
+      <div style="text-align: center; margin: 30px 0;">
+        <a href="${
+          process.env.CLIENT_URL || "http://localhost:5173"
+        }/my-orders" style="display: inline-block; padding: 14px 28px; background: #10b981; color: white; text-decoration: none; border-radius: 6px; font-weight: bold;">Download Certificate</a>
+      </div>
+
+      ${
+        certificateUrl
+          ? `
+        <div style="margin-top: 20px; padding: 15px; background: #fef3c7; border-left: 4px solid #f59e0b; border-radius: 4px;">
+          <p style="margin: 0; font-size: 14px;">
+            <strong>📄 Direct Download:</strong><br/>
+            <a href="${certificateUrl}" style="color: #2563eb;">${certificateUrl}</a>
+          </p>
+        </div>
+      `
+          : ""
+      }
+
+      <p style="color: #6b7280; font-size: 12px; margin-top: 30px;">
+        Need help? Contact support@veribridge.co.ke
+      </p>
+    </div>
+  `;
+
+  const text = `
+🎉 CONGRATULATIONS! YOUR COMPANY IS REGISTERED!
+
+Your company formation is complete!
+
+Company Name: ${companyName}
+Registration Number: ${registrationNumber}
+Status: ✅ Registered
+
+NEXT STEPS:
+1. Download your incorporation certificate
+2. Set up your business bank account
+3. Register for VAT if applicable
+4. Open merchant accounts
+
+View your certificate: ${
+    process.env.CLIENT_URL || "http://localhost:5173"
+  }/my-orders
+
+${certificateUrl ? `Direct download: ${certificateUrl}` : ""}
+
+Need help? Email support@veribridge.co.ke
+  `;
+
+  if (!transporter) {
+    logger.debug(
+      "\n📧 FORMATION COMPLETION EMAIL (Not sent - SMTP not configured)"
+    );
+    logger.debug(`To: ${directorEmail}`);
+    logger.debug(`Subject: ${subject}`);
+    logger.debug(text);
+    return { success: true, demo: true };
+  }
+
+  try {
+    await transporter.sendMail({
+      from: `"VeriBridge" <${process.env.SMTP_USER}>`,
+      to: directorEmail,
+      subject,
+      text,
+      html,
+    });
+
+    logger.success(`Formation completion email sent to ${directorEmail}`);
+    return { success: true };
+  } catch (error) {
+    console.error(
+      "❌ Failed to send formation completion email:",
+      error.message
+    );
     throw error;
   }
 }

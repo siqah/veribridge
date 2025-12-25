@@ -26,16 +26,19 @@ export default function Login() {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-slate-900 via-blue-900 to-slate-900 p-4">
-      <div className="w-full max-w-md">
+    <div className="min-h-screen flex items-center justify-center bg-forest-950 relative overflow-hidden p-4">
+      {/* Subtle texture overlay matching landing page */}
+      <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_50%,rgba(16,185,129,0.03),transparent_50%)] pointer-events-none" />
+      
+      <div className="w-full max-w-md relative z-10">
         {/* Compact Card */}
-        <div className="backdrop-blur-xl bg-white/10 border border-white/20 rounded-2xl shadow-2xl p-8">
+        <div className="backdrop-blur-xl bg-forest-900/50 border border-emerald-500/10 rounded-2xl shadow-2xl p-8">
           {/* Logo & Title - Compact */}
           <div className="text-center mb-6">
             <h1 className="text-3xl font-bold text-white mb-1">
-              Veri<span className="text-blue-400">Bridge</span>
+              Veri<span className="text-emerald-400">Bridge</span>
             </h1>
-            <p className="text-blue-200 text-sm">Welcome back</p>
+            <p className="text-slate-300 text-sm">Welcome back</p>
           </div>
 
           {/* Error Alert - Compact */}
@@ -54,7 +57,7 @@ export default function Login() {
                 onChange={(e) => setEmail(e.target.value)}
                 placeholder="Email address"
                 required
-                className="w-full px-4 py-3 bg-white/10 border border-white/20 rounded-lg text-white placeholder-white/50 focus:outline-none focus:ring-2 focus:ring-blue-400 focus:border-transparent transition"
+                className="w-full px-4 py-3 bg-white/5 border border-emerald-500/20 rounded-lg text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-emerald-400 focus:border-transparent transition"
               />
             </div>
 
@@ -65,14 +68,14 @@ export default function Login() {
                 onChange={(e) => setPassword(e.target.value)}
                 placeholder="Password"
                 required
-                className="w-full px-4 py-3 bg-white/10 border border-white/20 rounded-lg text-white placeholder-white/50 focus:outline-none focus:ring-2 focus:ring-blue-400 focus:border-transparent transition"
+                className="w-full px-4 py-3 bg-white/5 border border-emerald-500/20 rounded-lg text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-emerald-400 focus:border-transparent transition"
               />
             </div>
 
             <button
               type="submit"
               disabled={loading}
-              className="w-full py-3 bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 text-white font-semibold rounded-lg shadow-lg hover:shadow-xl transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
+              className="w-full py-3 bg-gradient-to-r from-emerald-600 to-emerald-500 hover:from-emerald-500 hover:to-emerald-400 text-white font-semibold rounded-lg shadow-lg hover:shadow-xl transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
             >
               {loading ? 'Signing in...' : 'Sign In'}
             </button>
@@ -82,15 +85,15 @@ export default function Login() {
           <div className="mt-4 text-center space-y-2">
             <Link
               to="/forgot-password"
-              className="block text-sm text-blue-300 hover:text-blue-200 transition"
+              className="block text-sm text-emerald-400 hover:text-emerald-300 transition"
             >
               Forgot password?
             </Link>
-            <div className="text-sm text-white/70">
+            <div className="text-sm text-slate-300">
               Don't have an account?{' '}
               <Link
                 to="/signup"
-                className="text-blue-300 hover:text-blue-200 font-semibold transition"
+                className="text-emerald-400 hover:text-emerald-300 font-semibold transition"
               >
                 Sign up
               </Link>
@@ -99,7 +102,7 @@ export default function Login() {
         </div>
 
         {/* Footer - Outside card */}
-        <p className="text-center text-white/50 text-xs mt-6">
+        <p className="text-center text-slate-500 text-xs mt-6">
           Secure authentication powered by Supabase
         </p>
       </div>

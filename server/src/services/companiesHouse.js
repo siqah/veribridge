@@ -1,4 +1,5 @@
 import axios from "axios";
+import logger from "../utils/logger.js";
 
 /**
  * Companies House API Service
@@ -10,15 +11,14 @@ class CompaniesHouseService {
     this.apiKey = process.env.COMPANIES_HOUSE_API_KEY;
     this.baseUrl = "https://api.company-information.service.gov.uk";
 
-    // Debug: Show what we got
-    console.log(
+    // Log API key status
+    logger.info(
       "🔑 Companies House API Key loaded:",
       this.apiKey ? "✅ Present" : "❌ Missing"
     );
-    console.log("   Value:", this.apiKey || "undefined");
 
     if (!this.apiKey) {
-      console.warn(
+      logger.warn(
         "⚠️  COMPANIES_HOUSE_API_KEY not set. UK name search will not work."
       );
     }
@@ -32,7 +32,7 @@ class CompaniesHouseService {
   async checkNameAvailability(companyName) {
     // Fallback: If no API key, simulate availability check
     if (!this.apiKey) {
-      console.warn("⚠️  No API key - simulating name check");
+      logger.warn("⚠️  No API key - simulating name check");
       const normalizedName = companyName.trim().toUpperCase();
 
       // Simulate some obviously taken names
@@ -70,7 +70,7 @@ class CompaniesHouseService {
     try {
       const normalizedName = companyName.trim().toUpperCase();
 
-      console.log(
+      logger.info(
         `🔍 Checking company name with Companies House: "${companyName}"`
       );
 
@@ -86,7 +86,7 @@ class CompaniesHouseService {
         timeout: 15000, // 15 second timeout
       });
 
-      console.log(`✅ Companies House API responded successfully`);
+      logger.success(`Companies House API responded successfully`);
 
       // Check for exact match (case-insensitive)
       const exactMatch = response.data.items?.find(

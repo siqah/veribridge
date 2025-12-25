@@ -2,14 +2,13 @@ import { useNavigate } from 'react-router-dom';
 import { useState, useEffect } from 'react';
 import { 
   MapPin, Building2, FileText, Mail, 
-  Key, ArrowRight, CheckCircle, Lock, Globe, Menu, X
+  Key, ArrowRight, CheckCircle, Lock, Globe
 } from 'lucide-react';
 import TargetCustomersSection from '../components/TargetCustomersSection';
 import { useLocale } from '../hooks/useLocale';
 
 export default function LandingPage() {
   const navigate = useNavigate();
-  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [isScrolled, setIsScrolled] = useState(false);
   const { isKenyan } = useLocale();
 
@@ -80,53 +79,39 @@ export default function LandingPage() {
           ? 'py-3' 
           : 'py-4'
       }`}>
-        <div className={`mx-auto px-6 flex justify-between items-center transition-all duration-300 ${
+        <div className={`mx-auto px-4 sm:px-6 flex justify-between items-center transition-all duration-300 ${
           isScrolled
             ? 'max-w-4xl bg-slate-100/90 backdrop-blur-lg border border-slate-200 rounded-full shadow-2xl shadow-slate-200/50'
             : 'max-w-6xl bg-slate-100/80 backdrop-blur-lg border border-slate-200 rounded-full shadow-lg shadow-slate-200/30'
         }`}>
-        <div className="flex items-center gap-3 cursor-pointer" onClick={() => navigate('/')}>
-          <img src="/veribridge-logo.png" alt="VeriBridge" className="w-14 h-14" />
-          <span className="text-xl font-semibold text-slate-900 tracking-tight">VeriBridge</span>
+        <div className="flex items-center gap-2 sm:gap-3 cursor-pointer" onClick={() => navigate('/')}>
+          <img src="/veribridge-logo.png" alt="VeriBridge" className="w-10 h-10 sm:w-14 sm:h-14" />
+          <span className="text-lg sm:text-xl font-semibold text-slate-900 tracking-tight">VeriBridge</span>
         </div>
         
-        {/* Desktop Menu */}
-        <div className="hidden md:flex items-center gap-8">
-          <button onClick={scrollToFeatures} className="text-slate-600 hover:text-slate-900 text-sm transition-colors">Product</button>
-          <button onClick={() => navigate('/login')} className="text-slate-600 hover:text-slate-900 text-sm transition-colors">Log In</button>
-          <button onClick={() => navigate('/signup')} className="bg-emerald-600 text-white hover:bg-emerald-500 px-6 py-2.5 rounded-full font-medium text-sm transition-all">Get Started</button>
+        {/* Always Visible Auth Buttons */}
+        <div className="flex items-center gap-2 sm:gap-4">
+          {/* Product link - hidden on mobile */}
+          <button onClick={scrollToFeatures} className="hidden md:block text-slate-600 hover:text-slate-900 text-sm transition-colors">Product</button>
+          
+          {/* Login - Always visible */}
+          <button 
+            onClick={() => navigate('/login')} 
+            className="text-slate-600 hover:text-slate-900 text-xs sm:text-sm font-medium transition-colors px-3 py-2"
+          >
+            Log In
+          </button>
+          
+          {/* Sign Up - Always visible */}
+          <button 
+            onClick={() => navigate('/signup')} 
+            className="bg-emerald-600 text-white hover:bg-emerald-500 px-3 sm:px-6 py-2 sm:py-2.5 rounded-full font-medium text-xs sm:text-sm transition-all whitespace-nowrap"
+          >
+            Sign Up
+          </button>
         </div>
-
-        {/* Mobile Menu Button */}
-        <button 
-          className="md:hidden text-slate-900 p-2"
-          onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-        >
-          {mobileMenuOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
-        </button>
         </div>
       </nav>
-
-      {/* Mobile Menu Overlay */}
-      {mobileMenuOpen && (
-        <div className="fixed inset-0 z-40 md:hidden">
-          <div className="absolute inset-0 bg-forest-950/95 backdrop-blur-lg" onClick={() => setMobileMenuOpen(false)} />
-          <div className="relative bg-forest-900 border-b border-emerald-500/10 p-6 space-y-4">
-            <button
-              onClick={() => { navigate('/login'); setMobileMenuOpen(false); }}
-              className="block w-full text-left text-white py-3 px-4 rounded-lg hover:bg-white/5 transition-colors"
-            >
-              Log In
-            </button>
-            <button
-              onClick={() => { navigate('/signup'); setMobileMenuOpen(false); }}
-              className="block w-full bg-emerald-600 text-white hover:bg-emerald-500 py-3 px-4 rounded-lg font-medium transition-colors"
-            >
-              Get Started
-            </button>
-          </div>
-        </div>
-      )}
 
       {/* Hero Section */}
       <div className="relative z-10 max-w-5xl mx-auto px-6 lg:px-8 pt-32 pb-20 lg:pt-40 lg:pb-32 text-center">

@@ -1,10 +1,14 @@
 // Load environment variables FIRST (before any other imports)
 import "./env.js";
+import validateEnv from "./config/validateEnv.js";
 
 import express from "express";
 import cors from "cors";
 import helmet from "helmet";
 import morgan from "morgan";
+
+// Validate environment variables before starting server
+validateEnv();
 
 // Routes
 import verificationRoutes from "./routes/verification.js";
@@ -177,5 +181,24 @@ app.listen(PORT, () => {
   ╚═══════════════════════════════════════════════╝
   `);
 });
+
+// Graceful shutdown handling
+import prisma from "./db/prisma.js";
+
+const gracefulShutdown = async (signal) => {
+  console.log(`\n🛑 ${signal} received. Starting graceful shutdown...`);
+
+  try {
+    await prisma.$disconnect();
+    console.log("✅ Database connections closed");
+    process.exit(0);
+  } catch (error) {
+    console.error("❌ Error during shutdown:", error);
+    process.exit(1);
+  }
+};
+
+process.on("SIGINT", () => gracefulShutdown("SIGINT"));
+process.on("SIGTERM", () => gracefulShutdown("SIGTERM"));
 
 export default app;

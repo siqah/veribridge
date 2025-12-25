@@ -3,6 +3,7 @@ import bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken";
 import crypto from "crypto";
 import prisma from "../db/prisma.js";
+import logger from "../utils/logger.js";
 import {
   sendVerificationEmail,
   sendPasswordResetEmail,
@@ -84,7 +85,7 @@ router.post("/signup", async (req, res) => {
       expiresIn: JWT_EXPIRES_IN,
     });
 
-    console.log(`✅ New user registered: ${email}`);
+    logger.success(`New user registered: ${email}`);
 
     res.status(201).json({
       success: true,
@@ -151,7 +152,7 @@ router.post("/login", async (req, res) => {
       data: { lastLogin: new Date() },
     });
 
-    console.log(`✅ User logged in: ${email}`);
+    logger.success(`User logged in: ${email}`);
 
     res.json({
       success: true,
@@ -321,7 +322,7 @@ router.post("/verify-email", async (req, res) => {
       where: { token },
     });
 
-    console.log(`✅ Email verified for user: ${tokenRecord.userId}`);
+    logger.success(`Email verified for user: ${tokenRecord.userId}`);
 
     res.json({
       success: true,
@@ -452,7 +453,7 @@ router.post("/reset-password", async (req, res) => {
       data: { used: true },
     });
 
-    console.log(`✅ Password reset for user: ${tokenRecord.userId}`);
+    logger.success(`Password reset for user: ${tokenRecord.userId}`);
 
     res.json({
       success: true,

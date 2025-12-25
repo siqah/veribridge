@@ -8,8 +8,4 @@ const __dirname = dirname(__filename);
 // Load environment variables BEFORE anything else
 dotenv.config({ path: join(__dirname, "../.env") });
 
-// Debug: Verify it loaded
-console.log(
-  "🔧 Environment loaded. API Key present:",
-  !!process.env.COMPANIES_HOUSE_API_KEY
-);
+// Note: Logger will be imported after env is loaded in index.js
