@@ -133,7 +133,177 @@ router.post("/upload", authenticateToken, async (req, res) => {
     res.json({ success: true, item: data });
   } catch (error) {
     console.error("Error uploading mail:", error);
-    res.status(500).json({ error: "Failed to upload mail item" });
+    res.status(500).json({ error: "Failed to upload mail" });
+  }
+});
+
+// GET /api/mailbox/admin/history - Get all mail with filters (admin only)
+router.get("/admin/history", authenticateToken, async (req, res) => {
+  try {
+    // Verify admin
+    const ADMIN_EMAIL = process.env.ADMIN_EMAIL || "admin@veribridge.co.ke";
+    if (req.user.email !== ADMIN_EMAIL) {
+      return res.status(403).json({ error: "Admin access required" });
+    }
+
+    const {
+      search = "",
+      startDate,
+      endDate,
+      customerId,
+      isRead,
+      page = 1,
+      limit = 20,
+    } = req.query;
+
+    const offset = (parseInt(page) - 1) * parseInt(limit);
+
+    // Build where clause for Supabase query
+    let query = supabase.from("mailbox_items").select(
+      `
+        id,
+        title,
+        sender,
+        file_url,
+        received_at,
+        is_read,
+        user_id
+      `,
+      { count: "exact" }
+    );
+
+    // Date range filter
+    if (startDate) {
+      query = query.gte("received_at", new Date(startDate).toISOString());
+    }
+    if (endDate) {
+      const endDateTime = new Date(endDate);
+      endDateTime.setHours(23, 59, 59, 999);
+      query = query.lte("received_at", endDateTime.toISOString());
+    }
+
+    // Customer filter
+    if (customerId) {
+      query = query.eq("user_id", customerId);
+    }
+
+    // Read status filter
+    if (isRead !== undefined && isRead !== "") {
+      query = query.eq("is_read", isRead === "true");
+    }
+
+    // Apply search (title or sender)
+    if (search) {
+      query = query.or(`title.ilike.%${search}%,sender.ilike.%${search}%`);
+    }
+
+    // Apply pagination and ordering
+    const {
+      data: items,
+      error,
+      count,
+    } = await query
+      .order("received_at", { ascending: false })
+      .range(offset, offset + parseInt(limit) - 1);
+
+    if (error) throw error;
+
+    // Fetch customer info for each mail item
+    const userIds = [...new Set(items.map((item) => item.user_id))];
+    const { data: users } = await supabase
+      .from("users")
+      .select("supabase_id, email, full_name")
+      .in("supabase_id", userIds);
+
+    // Map customer info to mail items
+    const userMap = {};
+    users?.forEach((user) => {
+      userMap[user.supabase_id] = {
+        email: user.email,
+        name: user.full_name,
+      };
+    });
+
+    const enrichedItems = items.map((item) => ({
+      ...item,
+      customer: userMap[item.user_id] || {
+        email: "Unknown",
+        name: "Unknown",
+      },
+    }));
+
+    res.json({
+      success: true,
+      data: {
+        items: enrichedItems,
+        pagination: {
+          page: parseInt(page),
+          limit: parseInt(limit),
+          total: count || 0,
+          totalPages: Math.ceil((count || 0) / parseInt(limit)),
+        },
+      },
+    });
+  } catch (error) {
+    console.error("Error fetching mail history:", error);
+    res.status(500).json({ error: "Failed to fetch mail history" });
+  }
+});
+
+// GET /api/mailbox/admin/stats - Get mail statistics (admin only)
+router.get("/admin/stats", authenticateToken, async (req, res) => {
+  try {
+    // Verify admin
+    const ADMIN_EMAIL = process.env.ADMIN_EMAIL || "admin@veribridge.co.ke";
+    if (req.user.email !== ADMIN_EMAIL) {
+      return res.status(403).json({ error: "Admin access required" });
+    }
+
+    // Get today's date range
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    const tomorrow = new Date(today);
+    tomorrow.setDate(tomorrow.getDate() + 1);
+
+    // Total uploaded
+    const { count: totalUploaded } = await supabase
+      .from("mailbox_items")
+      .select("*", { count: "exact", head: true });
+
+    // Uploaded today
+    const { count: uploadedToday } = await supabase
+      .from("mailbox_items")
+      .select("*", { count: "exact", head: true })
+      .gte("received_at", today.toISOString())
+      .lt("received_at", tomorrow.toISOString());
+
+    // Unread count
+    const { count: unreadCount } = await supabase
+      .from("mailbox_items")
+      .select("*", { count: "exact", head: true })
+      .eq("is_read", false);
+
+    // Customers with mail (distinct user_ids)
+    const { data: distinctUsers } = await supabase
+      .from("mailbox_items")
+      .select("user_id");
+
+    const customersWithMail = new Set(
+      distinctUsers?.map((item) => item.user_id)
+    ).size;
+
+    res.json({
+      success: true,
+      stats: {
+        totalUploaded: totalUploaded || 0,
+        uploadedToday: uploadedToday || 0,
+        unreadCount: unreadCount || 0,
+        customersWithMail,
+      },
+    });
+  } catch (error) {
+    console.error("Error fetching mail stats:", error);
+    res.status(500).json({ error: "Failed to fetch statistics" });
   }
 });
 

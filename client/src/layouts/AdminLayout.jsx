@@ -1,5 +1,5 @@
 import { Outlet, NavLink, useNavigate } from 'react-router-dom';
-import { Building2, Mail, Settings, LogOut } from 'lucide-react';
+import { Building2, Mail, Archive, Settings, LogOut } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
 
 export default function AdminLayout() {
@@ -19,6 +19,12 @@ export default function AdminLayout() {
       label: 'Mail Management', 
       icon: Mail,
       description: 'Upload customer mail'
+    },
+    {
+      path: '/admin/mail-history',
+      label: 'Mail History',
+      icon: Archive,
+      description: 'View mail upload history'
     },
   ];
 

@@ -12,11 +12,13 @@ export default function MailManagement() {
   const [searchTerm, setSearchTerm] = useState('');
   const [loading, setLoading] = useState(true);
   const [showUploadForm, setShowUploadForm] = useState(false);
+  const [stats, setStats] = useState({ uploadedToday: 0 });
   const { getToken } = useAuth();
 
   // Fetch all users/customers
   useEffect(() => {
     fetchUsers();
+    fetchStats();
   }, []);
 
   const fetchUsers = async () => {
@@ -33,6 +35,19 @@ export default function MailManagement() {
     }
   };
 
+
+  const fetchStats = async () => {
+    try {
+      const token = await getToken();
+      const { data } = await axios.get(`${API_URL}/api/mailbox/admin/stats`, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      setStats(data.stats);
+    } catch (error) {
+      console.error('Error fetching stats:', error);
+    }
+  };
+
   const filteredUsers = users.filter(user =>
     user.email?.toLowerCase().includes(searchTerm.toLowerCase()) ||
     user.fullName?.toLowerCase().includes(searchTerm.toLowerCase())
@@ -41,6 +56,7 @@ export default function MailManagement() {
   const handleUploadSuccess = () => {
     setShowUploadForm(false);
     setSelectedUser(null);
+    fetchStats(); // Refresh stats after upload
   };
 
   return (
@@ -78,7 +94,7 @@ export default function MailManagement() {
             </div>
             <div>
               <p style={{ color: 'var(--text-muted)' }} className="text-sm">Mail Uploaded Today</p>
-              <p className="text-2xl font-bold" style={{ color: 'var(--text-primary)' }}>-</p>
+              <p className="text-2xl font-bold" style={{ color: 'var(--text-primary)' }}>{stats.uploadedToday}</p>
             </div>
           </div>
         </div>

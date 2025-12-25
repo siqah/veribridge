@@ -21,6 +21,7 @@ import MyOrders from '../pages/business/MyOrders';
 import FormationOrders from '../pages/admin/FormationOrders';
 import OrderDetail from '../pages/admin/OrderDetail';
 import MailManagement from '../pages/admin/MailManagement';
+import MailHistory from '../pages/admin/MailHistory';
 
 // Auth Pages
 import Login from '../pages/auth/Login';
@@ -78,6 +79,7 @@ export const appLayoutRoutes = {
     { path: 'admin', element: FormationOrders, admin: true },
     { path: 'admin/order/:id', element: OrderDetail, admin: true },
     { path: 'admin/mail', element: MailManagement, admin: true },
+    { path: 'admin/mail-history', element: MailHistory, admin: true },
   ],
   
   // Legal (public)

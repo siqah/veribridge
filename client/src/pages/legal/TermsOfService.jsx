@@ -13,7 +13,7 @@ export default function TermsOfService() {
 
         <div className="prose prose-invert max-w-none space-y-6" style={{ color: 'var(--text-secondary)' }}>
           <p className="text-sm" style={{ color: 'var(--text-muted)' }}>
-            Last updated: December 17, 2024
+            Last updated: December 17, 2025
           </p>
 
           <section>
@@ -29,7 +29,7 @@ export default function TermsOfService() {
             <p>VeriBridge provides the following services:</p>
             <ul className="list-disc pl-6 space-y-2">
               <li><strong>Address Architect:</strong> Kenya address verification and formatting</li>
-              <li><strong>Company Formation:</strong> UK Ltd and US LLC registration services</li>
+              <li><strong>Company Formation:</strong> UK Ltd  registration services</li>
               <li><strong>Digital Mailbox:</strong> Virtual business address and mail management</li>
               <li><strong>Business Tools:</strong> Invoicing and KRA-compliant documentation</li>
             </ul>
