@@ -19,7 +19,7 @@ export const supabase = createClient(supabaseUrl, supabaseKey);
 export async function uploadToSupabase(
   fileBuffer,
   fileName,
-  bucket = "certificates"
+  bucket = "mail-attachments"
 ) {
   const { data, error } = await supabase.storage
     .from(bucket)

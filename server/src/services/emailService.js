@@ -1,7 +1,12 @@
 import nodemailer from "nodemailer";
 import logger from "../utils/logger.js";
 
-// Email transporter configuration
+const FROM_EMAIL = process.env.FROM_EMAIL || "noreply@veribridge.co.ke";
+const CLIENT_URL = process.env.CLIENT_URL || "http://localhost:5173";
+
+/**
+ * Create email transporter
+ */
 const createTransporter = () => {
   // Check if SMTP is configured
   const smtpConfigured = process.env.SMTP_HOST && process.env.SMTP_USER;
@@ -11,7 +16,7 @@ const createTransporter = () => {
     return null;
   }
 
-  return nodemailer.createTransporter({
+  return nodemailer.createTransport({
     host: process.env.SMTP_HOST,
     port: process.env.SMTP_PORT || 587,
     secure: false, // true for 465, false for other ports

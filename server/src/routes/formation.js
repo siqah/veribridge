@@ -93,54 +93,66 @@ router.get("/uk-check-name", async (req, res) => {
 
 /**
  * GET /api/formation
- * Get all formation orders (admin view)
+ * List all formation orders with pagination (admin, cached)
  */
 router.get("/", async (req, res) => {
   try {
-    const { status, search, limit = 100, offset = 0 } = req.query;
+    const limit = parseInt(req.query.limit) || 50;
+    const offset = parseInt(req.query.offset) || 0;
+    const page = Math.floor(offset / limit) + 1;
 
-    // Build where clause
-    const where = {};
+    const cacheKey = `formation:admin:list:page${page}:limit${limit}`;
 
-    if (status && status !== "ALL") {
-      where.status = status;
+    // Check cache first
+    const cached = cache.get(cacheKey);
+    if (cached) {
+      return res.json(cached);
     }
 
-    if (search) {
-      where.OR = [
-        { companyName: { contains: search, mode: "insensitive" } },
-        { directorName: { contains: search, mode: "insensitive" } },
-        { id: { contains: search, mode: "insensitive" } },
-      ];
-    }
+    // Only select fields needed for admin list view
+    const [orders, total] = await Promise.all([
+      prisma.companyOrder.findMany({
+        take: limit,
+        skip: offset,
+        orderBy: { createdAt: "desc" },
+        select: {
+          id: true,
+          userId: true,
+          companyName: true,
+          jurisdiction: true,
+          companyType: true,
+          directorName: true,
+          directorEmail: true,
+          directorPhone: true,
+          directorAddress: true,
+          status: true,
+          paymentAmount: true,
+          paymentRef: true,
+          currency: true,
+          kycVerified: true,
+          adminNotes: true,
+          registrationNumber: true,
+          certificateUrl: true,
+          createdAt: true,
+          updatedAt: true,
+          completedAt: true,
+        },
+      }),
+      prisma.companyOrder.count(),
+    ]);
 
-    // Fetch orders with ALL fields
-    const orders = await prisma.companyOrder.findMany({
-      where,
-      take: parseInt(limit),
-      skip: parseInt(offset),
-      orderBy: { createdAt: "desc" },
-      // Return all fields
-    });
-
-    // Get total count
-    const total = await prisma.companyOrder.count({ where });
-
-    res.json({
+    const response = {
       success: true,
       orders: orders.map((order) => ({
         id: order.id,
+        user_id: order.userId,
         company_name: order.companyName,
-        alt_name_1: order.altName1,
-        alt_name_2: order.altName2,
         jurisdiction: order.jurisdiction,
         company_type: order.companyType,
-        industry_code: order.industryCode,
         director_name: order.directorName,
         director_email: order.directorEmail,
         director_phone: order.directorPhone,
         director_address: order.directorAddress,
-        director_data: order.directorData, // JSON with IN01 fields
         status: order.status,
         payment_amount: order.paymentAmount,
         payment_ref: order.paymentRef,
@@ -153,8 +165,13 @@ router.get("/", async (req, res) => {
         updated_at: order.updatedAt,
         completed_at: order.completedAt,
       })),
-      pagination: { total, limit: parseInt(limit), offset: parseInt(offset) },
-    });
+      pagination: { total, limit, offset },
+    };
+
+    // Cache for 30 seconds
+    cache.set(cacheKey, response, 30000);
+
+    res.json(response);
   } catch (error) {
     console.error("Formation orders list error:", error);
     res.status(500).json({ error: "Failed to fetch formation orders" });
@@ -319,6 +336,12 @@ router.post("/", authenticateToken, async (req, res) => {
       },
     });
 
+    // Invalidate admin cache (all pages)
+    cache.invalidatePattern("formation:admin:list:*");
+
+    // Invalidate user's orders cache
+    cache.del(`formation:orders:${userId}`);
+
     // Generate and log admin alert email (formatted for 1st Formations)
     logFormationAlert(formation, req.body);
 
@@ -366,43 +389,7 @@ router.get("/:id", async (req, res) => {
     });
   } catch (error) {
     console.error("Get formation error:", error);
-    res.status(500).json({ error: "Failed to fetch formation order" });
-  }
-});
-
-/**
- * GET /api/formation
- * List all formation orders
- */
-router.get("/", async (req, res) => {
-  try {
-    const { status, userId } = req.query;
-
-    const where = {};
-
-    if (status) {
-      where.status = status;
-    }
-
-    if (userId) {
-      where.userId = userId;
-    }
-
-    const formations = await prisma.companyOrder.findMany({
-      where,
-      orderBy: {
-        createdAt: "desc",
-      },
-      take: 100,
-    });
-
-    res.json({
-      success: true,
-      orders: formations,
-      count: formations.length,
-    });
-  } catch (error) {
-    console.error("List formations error:", error);
+    console.error("Admin formation orders error:", error);
     res.status(500).json({ error: "Failed to fetch formation orders" });
   }
 });
@@ -466,6 +453,9 @@ router.patch("/:id/status", async (req, res) => {
 
     // Invalidate cache for this user's orders
     cache.del(`formation:orders:${formation.userId}`);
+
+    // Invalidate admin cache
+    cache.invalidatePattern("formation:admin:list:*");
 
     // Log audit
     await prisma.formationAuditLog.create({
@@ -581,6 +571,9 @@ router.post(
 
       // Invalidate cache for this user's orders
       cache.del(`formation:orders:${order.userId}`);
+
+      // Invalidate admin cache
+      cache.invalidatePattern("formation:admin:list:*");
 
       console.log(
         `📄 Certificate uploaded to Supabase for order ${id.slice(0, 8)}`

@@ -7,8 +7,9 @@ export default function Signup() {
   const [password, setPassword] = useState('');
   const [fullName, setFullName] = useState('');
   const [error, setError] = useState('');
+  const [success, setSuccess] = useState(false);
   const [loading, setLoading] = useState(false);
-  const { signup, login } = useAuth();
+  const { signup } = useAuth();
   const navigate = useNavigate();
 
   const handleSubmit = async (e) => {
@@ -20,16 +21,44 @@ export default function Signup() {
       // Sign up the user
       await signup(email, password, fullName);
       
-      // Automatically login the user after signup
-      await login(email, password);
+      // Show success message (email confirmation required)
+      setSuccess(true);
       
-      // Redirect directly to dashboard
-      navigate('/dashboard');
+      // Redirect to login after 3 seconds
+      setTimeout(() => navigate('/login'), 3000);
     } catch (err) {
       setError(err.message);
       setLoading(false);
     }
   };
+
+  if (success) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-forest-950 relative overflow-hidden p-4">
+        <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_50%,rgba(16,185,129,0.03),transparent_50%)] pointer-events-none" />
+        
+        <div className="w-full max-w-md relative z-10">
+          <div className="backdrop-blur-xl bg-forest-900/50 border border-emerald-500/10 rounded-2xl shadow-2xl p-8 text-center">
+            <div className="w-16 h-16 bg-emerald-500 rounded-full flex items-center justify-center mx-auto mb-4">
+              <svg className="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+              </svg>
+            </div>
+            <h2 className="text-2xl font-bold text-white mb-2">Check Your Email!</h2>
+            <p className="text-slate-300">
+              We've sent a verification link to <strong>{email}</strong>
+            </p>
+            <p className="text-slate-400 text-sm mt-4">
+              Click the link to verify your email, then you can login.
+            </p>
+            <p className="text-emerald-400 text-sm mt-2">
+              Redirecting to login...
+            </p>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-forest-950 relative overflow-hidden p-4">

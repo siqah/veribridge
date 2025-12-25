@@ -565,7 +565,7 @@ export function authenticateToken(req, res, next) {
             // Cache miss - query database
             user = await prisma.user.findUnique({
               where: { supabaseId: supabaseUserId },
-              select: { id: true, email: true },
+              select: { id: true, email: true, supabaseId: true }, // FIXED: Include supabaseId
             });
 
             // If user doesn't exist by supabaseId, check by email
@@ -585,7 +585,7 @@ export function authenticateToken(req, res, next) {
                     emailVerified: decoded.email_confirmed_at ? true : false,
                     fullName: decoded.user_metadata?.full_name || undefined,
                   },
-                  select: { id: true, email: true },
+                  select: { id: true, email: true, supabaseId: true }, // FIXED
                 });
               } else {
                 // User doesn't exist at all - create new
@@ -597,7 +597,7 @@ export function authenticateToken(req, res, next) {
                     fullName: decoded.user_metadata?.full_name || null,
                     emailVerified: decoded.email_confirmed_at ? true : false,
                   },
-                  select: { id: true, email: true },
+                  select: { id: true, email: true, supabaseId: true }, // FIXED
                 });
               }
             }
@@ -606,7 +606,11 @@ export function authenticateToken(req, res, next) {
             cache.set(userCacheKey, user, 300000);
           }
 
-          req.user = { userId: user.id, email: user.email };
+          req.user = {
+            userId: user.id,
+            email: user.email,
+            supabaseId: user.supabaseId,
+          }; // FIXED
           return next();
         } catch (dbError) {
           console.error("Database error during Supabase auth:", dbError);

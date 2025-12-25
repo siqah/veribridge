@@ -13,8 +13,10 @@ const supabase = createClient(
 // GET /api/mailbox - Get all mail for authenticated user (with caching)
 router.get("/", authenticateToken, async (req, res) => {
   try {
-    const userId = req.user.userId;
-    const cacheKey = `mailbox:${userId}`;
+    // FIXED: Use supabaseId instead of userId (local DB id)
+    // Mail items use Supabase UUID as user_id
+    const supabaseId = req.user.supabaseId;
+    const cacheKey = `mailbox:${supabaseId}`;
 
     // Check cache first
     const cached = cache.get(cacheKey);
@@ -28,7 +30,7 @@ router.get("/", authenticateToken, async (req, res) => {
       .select(
         "id, user_id, order_id, title, sender, file_url, received_at, is_read"
       )
-      .eq("user_id", userId)
+      .eq("user_id", supabaseId) // Use Supabase ID, not local DB ID
       .order("received_at", { ascending: false })
       .limit(100); // Add limit to prevent loading too much data
 
@@ -50,20 +52,20 @@ router.get("/", authenticateToken, async (req, res) => {
 router.patch("/:id/read", authenticateToken, async (req, res) => {
   try {
     const { id } = req.params;
-    const userId = req.user.userId;
+    const supabaseId = req.user.supabaseId;
 
     const { data, error } = await supabase
       .from("mailbox_items")
       .update({ is_read: true })
       .eq("id", id)
-      .eq("user_id", userId) // Ensure user owns this mail
+      .eq("user_id", supabaseId) // Ensure user owns this mail
       .select()
       .single();
 
     if (error) throw error;
 
-    // Invalidate cache for this user
-    cache.del(`mailbox:${userId}`);
+    // Invalidate cache
+    cache.del(`mailbox:${supabaseId}`);
 
     res.json({ success: true, item: data });
   } catch (error) {
