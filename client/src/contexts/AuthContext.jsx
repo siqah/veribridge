@@ -27,10 +27,26 @@ export const AuthProvider = ({ children }) => {
     // Listen for auth changes
     const {
       data: { subscription },
-    } = supabase.auth.onAuthStateChange((_event, session) => {
+    } = supabase.auth.onAuthStateChange(async (_event, session) => {
       setSession(session);
       setUser(session?.user || null);
       setLoading(false);
+      
+      // Automatically refresh session if it exists but is expiring soon
+      if (session) {
+        const expiresAt = session.expires_at;
+        const currentTime = Math.floor(Date.now() / 1000);
+        const timeUntilExpiry = expiresAt - currentTime;
+        
+        // If session expires in less than 5 minutes, refresh it
+        if (timeUntilExpiry < 300) {
+          const { data, error } = await supabase.auth.refreshSession();
+          if (!error && data.session) {
+            setSession(data.session);
+            setUser(data.session.user);
+          }
+        }
+      }
     });
 
     return () => subscription.unsubscribe();

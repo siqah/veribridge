@@ -42,11 +42,21 @@ export default function AdminLogin() {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center p-4" 
-         style={{ background: 'var(--bg-primary)' }}>
-      
-      {/* Background gradient */}
-      <div className="absolute inset-0 bg-gradient-to-br from-blue-500/10 via-purple-500/10 to-pink-500/10 pointer-events-none" />
+    <div 
+      className="min-h-screen flex items-center justify-center p-4" 
+      style={{
+        background: '#0d2818', // Dark forest green - same as landing page
+        position: 'relative',
+        overflow: 'hidden'
+      }}
+    >
+      {/* Subtle emerald texture overlay - matches landing page */}
+      <div style={{
+        position: 'absolute',
+        inset: 0,
+        background: 'radial-gradient(circle at 50% 50%, rgba(16, 185, 129, 0.03), transparent 50%)',
+        pointerEvents: 'none'
+      }} />
       
       <div className="w-full max-w-md relative z-10">
         
@@ -60,25 +70,35 @@ export default function AdminLogin() {
           Back to Home
         </button>
 
-        {/* Login Card */}
-        <div className="p-8 rounded-2xl border backdrop-blur-xl"
-             style={{ 
-               background: 'var(--bg-secondary)',
-               borderColor: 'var(--border-color)',
-               boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.25)'
-             }}>
+        {/* Login Card with Professional Glassmorphism */}
+        <div 
+          style={{ 
+            background: 'rgba(26, 54, 40, 0.7)', // Semi-transparent forest green
+            borderRadius: '16px',
+            border: '1px solid rgba(16, 185, 129, 0.2)', // Subtle emerald border
+            backdropFilter: 'blur(20px)',
+            WebkitBackdropFilter: 'blur(20px)',
+            boxShadow: '0 8px 32px rgba(0, 0, 0, 0.4), 0 0 0 1px rgba(16, 185, 129, 0.1) inset'
+          }}
+          className="p-8"
+        >
           
-          {/* Header */}
+          {/* Header Section */}
           <div className="text-center mb-8">
-            <div className="inline-flex items-center justify-center w-16 h-16 rounded-2xl bg-gradient-to-br from-blue-500 to-purple-500 mb-4">
-              <Shield className="w-8 h-8 text-white" />
+            <div className="flex justify-center mb-4">
+              <div 
+                style={{
+                  background: 'linear-gradient(135deg, rgba(16, 185, 129, 0.2), rgba(5, 150, 105, 0.1))',
+                  padding: '12px',
+                  borderRadius: '12px',
+                  border: '1px solid rgba(16, 185, 129, 0.3)'
+                }}
+              >
+                <Shield className="w-8 h-8 text-emerald-400" />
+              </div>
             </div>
-            <h1 className="text-2xl font-bold mb-2" style={{ color: 'var(--text-primary)' }}>
-              Admin Access
-            </h1>
-            <p style={{ color: 'var(--text-muted)' }}>
-              Sign in to the VeriBridge admin panel
-            </p>
+            <h2 className="text-2xl font-bold text-white mb-2">Admin Access</h2>
+            <p className="text-emerald-200/80 text-sm">Sign in to the VeriBridge admin panel</p>
           </div>
 
           {/* Login Form */}
@@ -144,7 +164,12 @@ export default function AdminLogin() {
             <button
               type="submit"
               disabled={loading}
-              className="w-full py-3 rounded-lg font-semibold transition-all bg-gradient-to-r from-blue-500 to-purple-500 text-white hover:from-blue-600 hover:to-purple-600 disabled:opacity-50 disabled:cursor-not-allowed"
+              style={{
+                background: 'linear-gradient(135deg, rgba(16, 185, 129, 0.8), rgba(5, 150, 105, 0.9))',
+                border: '1px solid rgba(16, 185, 129, 0.3)',
+                boxShadow: '0 4px 12px rgba(16, 185, 129, 0.2)'
+              }}
+              className="w-full py-3 rounded-lg font-semibold transition-all text-white hover:shadow-lg hover:shadow-emerald-500/30 disabled:opacity-50 disabled:cursor-not-allowed"
             >
               {loading ? (
                 <span className="flex items-center justify-center gap-2">
@@ -158,14 +183,19 @@ export default function AdminLogin() {
           </form>
 
           {/* Security Notice */}
-          <div className="mt-6 pt-6 border-t" style={{ borderColor: 'var(--border-color)' }}>
-            <div className="flex items-start gap-2 text-xs" style={{ color: 'var(--text-muted)' }}>
-              <Lock className="w-4 h-4 flex-shrink-0 mt-0.5" />
-              <p>
-                This is a secure admin area. All login attempts are monitored and logged.
-                Unauthorized access is prohibited.
-              </p>
-            </div>
+          <div 
+            style={{
+              background: 'rgba(16, 185, 129, 0.1)',
+              border: '1px solid rgba(16, 185, 129, 0.2)',
+              borderRadius: '8px',
+              padding: '12px'
+            }}
+            className="mt-6 flex items-start gap-3 text-xs"
+          >
+            <Lock className="w-4 h-4 text-emerald-400 flex-shrink-0 mt-0.5" />
+            <p className="text-emerald-200/80 leading-relaxed">
+              This is a secure admin area. All login attempts are monitored and logged. Unauthorized access is prohibited.
+            </p>
           </div>
         </div>
 
