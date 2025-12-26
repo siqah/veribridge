@@ -24,6 +24,7 @@ import apiKeysRoutes from "./routes/apiKeys.js";
 import addressApiRoutes from "./routes/addressApi.js";
 import uploadRoutes from "./routes/upload.js";
 import usersRoutes from "./routes/users.js";
+import profileRoutes from "./routes/profile.js";
 
 const app = express();
 const PORT = process.env.PORT || 3001;
@@ -71,6 +72,7 @@ app.use("/api/keys", apiKeysRoutes);
 app.use("/api/v1", addressApiRoutes); // B2B API
 app.use("/api/upload", uploadRoutes); // File uploads
 app.use("/api/users", usersRoutes); // User management
+app.use("/api/profile", profileRoutes); // User profile
 
 // Public verification page (for QR codes)
 app.get("/verify/:id", async (req, res) => {

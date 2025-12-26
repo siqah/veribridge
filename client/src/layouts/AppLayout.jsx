@@ -57,6 +57,7 @@ export default function AppLayout() {
         { path: '/invoicing', title: 'Invoicing', icon: FileText },
         { path: '/mailbox', title: 'Digital Mailbox', icon: Mail },
         { path: '/api-keys', title: 'API Keys', icon: Key },
+        { path: '/profile', title: 'Profile', icon: User },
       ]
     }
   ];

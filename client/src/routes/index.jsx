@@ -16,6 +16,7 @@ import DigitalMailbox from '../pages/business/DigitalMailbox';
 import MailboxSubscription from '../pages/business/MailboxSubscription';
 import ApiKeys from '../pages/business/ApiKeys';
 import MyOrders from '../pages/business/MyOrders';
+import Profile from '../pages/business/Profile';
 
 // Admin Pages
 import FormationOrders from '../pages/admin/FormationOrders';
@@ -72,6 +73,7 @@ export const appLayoutRoutes = {
     { path: 'mailbox', element: DigitalMailbox, protected: true },
     { path: 'mailbox/subscribe', element: MailboxSubscription, protected: true },
     { path: 'api-keys', element: ApiKeys, protected: true },
+    { path: 'profile', element: Profile, protected: true },
   ],
   
   // Admin (admin only)

@@ -40,6 +40,7 @@ model User {
   emailVerifications   EmailVerification[]
   passwordResets       PasswordReset[]
   mailboxSubscriptions MailboxSubscription[]
+  userProfile          UserProfile?
 
   @@index([email])
   @@index([supabaseId])
@@ -131,32 +132,99 @@ model CompanyOrder {
 // ============================================
 
 model Invoice {
-  id            String    @id @default(uuid())
-  userId        String    @map("user_id")
-  invoiceNumber String    @unique @map("invoice_number") // INV-2024-001
-  clientName    String    @map("client_name")
-  clientEmail   String?   @map("client_email")
-  clientAddress String?   @map("client_address")
-  items         Json // Array of { description, quantity, rate, amount }
-  subtotal      Int // Amount before tax
-  taxRate       Int       @default(16) @map("tax_rate") // KRA VAT 16%
-  taxAmount     Int       @map("tax_amount")
-  total         Int // Final amount
-  currency      String    @default("KES")
-  status        String    @default("DRAFT") // 'DRAFT', 'SENT', 'PAID', 'OVERDUE', 'CANCELLED'
-  dueDate       DateTime? @map("due_date")
-  paidAt        DateTime? @map("paid_at")
-  notes         String? // Additional notes
-  pdfUrl        String?   @map("pdf_url") // Generated PDF URL
-  createdAt     DateTime  @default(now()) @map("created_at")
-  updatedAt     DateTime  @updatedAt @map("updated_at")
+  id            String @id @default(uuid())
+  userId        String @map("user_id")
+  invoiceNumber String @unique @map("invoice_number") // INV-2024-001
+
+  // Client Information
+  clientName    String  @map("client_name")
+  clientEmail   String? @map("client_email")
+  clientAddress String? @map("client_address")
+
+  // Financial Details
+  subtotal Float // Amount before tax
+  kraTax   Float  @default(0) @map("kra_tax") // KRA 1.5% for KES
+  total    Float // Final amount
+  currency String @default("KES") // KES, USD, GBP, EUR
+
+  // Payment Details (optional bank info)
+  bankName      String? @map("bank_name")
+  accountNumber String? @map("account_number")
+  iban          String?
+  swift         String?
+
+  // Status Tracking
+  status        String @default("DRAFT") // DRAFT, SENT, CANCELLED
+  paymentStatus String @default("UNPAID") @map("payment_status") // UNPAID, PAID, OVERDUE
+
+  // Dates
+  dueDate DateTime? @map("due_date")
+  paidAt  DateTime? @map("paid_at")
+  sentAt  DateTime? @map("sent_at")
+
+  // Files & Notes
+  pdfUrl String? @map("pdf_url") // Generated PDF URL
+  notes  String? // Additional notes
+
+  // Timestamps
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  // Relations
+  user      User              @relation(fields: [userId], references: [id], onDelete: Cascade)
+  lineItems InvoiceLineItem[]
+
+  @@index([userId])
+  @@index([status])
+  @@index([paymentStatus])
+  @@index([invoiceNumber])
+  @@map("invoices")
+}
+
+model InvoiceLineItem {
+  id        String @id @default(uuid())
+  invoiceId String @map("invoice_id")
+
+  description String
+  quantity    Int
+  rate        Float
+  amount      Float
+
+  createdAt DateTime @default(now()) @map("created_at")
+
+  invoice Invoice @relation(fields: [invoiceId], references: [id], onDelete: Cascade)
+
+  @@index([invoiceId])
+  @@map("invoice_line_items")
+}
+
+model UserProfile {
+  id     String @id @default(uuid())
+  userId String @unique @map("user_id")
+
+  // Business Details
+  businessName    String  @map("business_name")
+  businessEmail   String? @map("business_email")
+  businessPhone   String? @map("business_phone")
+  businessAddress String? @map("business_address")
+  businessLogo    String? @map("business_logo") // URL to logo in Supabase Storage
+
+  // Tax/Registration Numbers
+  taxId         String? @map("tax_id") // KRA PIN or VAT number
+  companyNumber String? @map("company_number")
+
+  // Invoice Settings
+  defaultCurrency String @default("KES") @map("default_currency")
+  invoicePrefix   String @default("INV") @map("invoice_prefix")
+
+  // Timestamps
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
 
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@index([userId])
-  @@index([status])
-  @@index([invoiceNumber])
-  @@map("invoices")
+  @@map("user_profiles")
 }
 
 // ============================================
