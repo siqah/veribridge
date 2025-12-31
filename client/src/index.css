@@ -5,23 +5,23 @@
 @tailwind components;
 @tailwind utilities;
 
-/* Dark theme (default) - Forest Theme */
+/* Dark theme (default) - Dark Forest Theme */
 :root,
 [data-theme="dark"] {
-  /* Backgrounds - Forest palette */
-  --bg-primary: #022c22; /* forest-950 */
-  --bg-secondary: #064e3b; /* forest-900 */
-  --bg-card: rgba(6, 78, 59, 0.5); /* forest-900/50 */
-  --bg-card-hover: #065f46; /* forest-800 */
+  /* Backgrounds - Deep Dark Forest */
+  --bg-primary: #0a0f0d; /* Very dark forest */
+  --bg-secondary: #141f1a; /* Dark forest */
+  --bg-card: rgba(20, 31, 26, 0.9); /* Card with slight green tint */
+  --bg-card-hover: #1a2b24; /* Slightly lighter on hover */
 
   /* Borders */
-  --border-color: #047857; /* forest-700 */
+  --border-color: #243d32; /* Muted forest border */
   --border-glow: #10b981; /* emerald-500 */
 
   /* Text colors */
   --text-primary: #f8fafc;
-  --text-secondary: #a7f3d0; /* emerald-200 */
-  --text-muted: #6ee7b7; /* emerald-300 */
+  --text-secondary: #94a3b8; /* Neutral gray for readability */
+  --text-muted: #64748b; /* Muted gray */
 
   /* Accent colors - Emerald */
   --accent-blue: #10b981; /* emerald-500 */
