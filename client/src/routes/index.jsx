@@ -9,12 +9,16 @@ import AddressBuilder from '../pages/verification/AddressBuilder';
 // Standalone Pages
 import MailboxInfo from '../pages/standalone/MailboxInfo';
 
+// Public Pages
+import InvoicePortal from '../pages/public/InvoicePortal';
+
 // Business Pages
 import CompanyFormation from '../pages/business/CompanyFormation';
 import Invoicing from '../pages/business/Invoicing';
+import RecurringInvoices from '../pages/business/RecurringInvoices';
 import DigitalMailbox from '../pages/business/DigitalMailbox';
 import MailboxSubscription from '../pages/business/MailboxSubscription';
-import ApiKeys from '../pages/business/ApiKeys';
+// ApiKeys feature removed
 import MyOrders from '../pages/business/MyOrders';
 
 // Admin Pages
@@ -51,6 +55,8 @@ export const standaloneRoutes = [
   { path: '/demo', element: DemoPage, public: true },
   { path: '/address-verification', element: AddressBuilder, public: true },
   { path: '/mailbox-info', element: MailboxInfo, public: true },
+  { path: '/invoice/:token', element: InvoicePortal, public: true },
+  { path: '/invoice/:token/callback', element: InvoicePortal, public: true },
 ];
 
 // Routes that use AppLayout
@@ -68,9 +74,10 @@ export const appLayoutRoutes = {
     { path: 'my-orders', element: MyOrders, protected: true },
     { path: 'company-formation', element: CompanyFormation, protected: true },
     { path: 'invoicing', element: Invoicing, protected: true },
+    { path: 'recurring-invoices', element: RecurringInvoices, protected: true },
     { path: 'mailbox', element: DigitalMailbox, protected: true },
     { path: 'mailbox/subscribe', element: MailboxSubscription, protected: true },
-    { path: 'api-keys', element: ApiKeys, protected: true },
+
   ],
   
   // Admin (admin only)

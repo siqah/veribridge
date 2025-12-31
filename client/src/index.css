@@ -5,29 +5,29 @@
 @tailwind components;
 @tailwind utilities;
 
-/* Dark theme (default) */
+/* Dark theme (default) - Forest Theme */
 :root,
 [data-theme="dark"] {
-  /* Backgrounds */
-  --bg-primary: #0f172a;
-  --bg-secondary: #1e293b;
-  --bg-card: rgba(26, 31, 46, 0.8);
-  --bg-card-hover: #242a3d;
+  /* Backgrounds - Forest palette */
+  --bg-primary: #022c22; /* forest-950 */
+  --bg-secondary: #064e3b; /* forest-900 */
+  --bg-card: rgba(6, 78, 59, 0.5); /* forest-900/50 */
+  --bg-card-hover: #065f46; /* forest-800 */
 
   /* Borders */
-  --border-color: #334155;
-  --border-glow: #3b82f6;
+  --border-color: #047857; /* forest-700 */
+  --border-glow: #10b981; /* emerald-500 */
 
   /* Text colors */
   --text-primary: #f8fafc;
-  --text-secondary: #94a3b8;
-  --text-muted: #64748b;
+  --text-secondary: #a7f3d0; /* emerald-200 */
+  --text-muted: #6ee7b7; /* emerald-300 */
 
-  /* Accent colors */
-  --accent-blue: #3b82f6;
-  --accent-blue-dark: #2563eb;
-  --accent-blue-glow: rgba(59, 130, 246, 0.3);
-  --accent-cyan: #06b6d4;
+  /* Accent colors - Emerald */
+  --accent-blue: #10b981; /* emerald-500 */
+  --accent-blue-dark: #059669; /* emerald-600 */
+  --accent-blue-glow: rgba(16, 185, 129, 0.3);
+  --accent-cyan: #34d399; /* emerald-400 */
 
   /* Status colors */
   --success: #10b981;
@@ -70,7 +70,8 @@
 
 body {
   margin: 0;
-  font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  font-family: "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto,
+    sans-serif;
   background: var(--bg-primary);
   min-height: 100vh;
   color: var(--text-primary);
@@ -127,17 +128,14 @@ body {
     background: var(--bg-card);
     backdrop-filter: blur(20px);
     border: 1px solid var(--border-color);
-    box-shadow: 
-      0 1px 3px 0 rgba(0, 0, 0, 0.1),
+    box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1),
       0 1px 2px -1px rgba(0, 0, 0, 0.1);
   }
-  
+
   .card:hover {
     border-color: var(--border-glow);
-    box-shadow: 
-      0 1px 3px 0 rgba(0, 0, 0, 0.1),
-      0 1px 2px -1px rgba(0, 0, 0, 0.1),
-      0 0 0 1px rgba(59, 130, 246, 0.1);
+    box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1),
+      0 1px 2px -1px rgba(0, 0, 0, 0.1), 0 0 0 1px rgba(59, 130, 246, 0.1);
   }
 
   /* Step indicator */

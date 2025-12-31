@@ -16,8 +16,8 @@ const CompanyFormation = () => {
   const [agreedToTerms, setAgreedToTerms] = useState(false);
   
   const [formData, setFormData] = useState({
-    jurisdiction: '', // 'UK' or 'US'
-    companyType: 'LTD', // 'LTD' or 'LLC'
+    jurisdiction: 'UK', // UK only
+    companyType: 'LTD', // UK Ltd Company
     companyName: '',
     altName1: '',
     altName2: '',
@@ -136,7 +136,7 @@ const CompanyFormation = () => {
   const canProceed = () => {
     switch (currentStep) {
       case 1:
-        return formData.jurisdiction && formData.companyType;
+        return true; // Just click to start with UK
       case 2:
         if (formData.jurisdiction === 'UK') {
           return formData.companyName && formData.sicCode;
@@ -321,65 +321,64 @@ const CompanyFormation = () => {
 
       {/* Form card */}
       <div className="card">
-        {/* Step 1: Jurisdiction Selection */}
+        {/* Step 1: UK Company Formation Info */}
         {currentStep === 1 && (
           <div>
             <h2 className="text-xl font-bold mb-6" style={{ color: 'var(--text-primary)' }}>
-              Select Jurisdiction
+              Register a UK Limited Company
             </h2>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              {[
-                {
-                  jurisdiction: 'UK',
-                  type: 'LTD',
-                  label: 'United Kingdom 🇬🇧',
-                  price: 'KES 25,000',
-                  badge: '🔥 Privacy Package',
-                  features: ['✅ London office address', '✅ Your address stays private', '✅ 24-48 hour processing', '✅ Wise banking fast-track']
-                },
-                {
-                  jurisdiction: 'US',
-                  type: 'LLC',
-                  label: 'United States 🇺🇸',
-                  price: 'KES 20,000',
-                  features: ['Global credibility', 'US payment processors', 'Tax advantages', 'Privacy protection']
-                }
-              ].map(option => (
-                <button
-                  key={option.jurisdiction}
-                  onClick={() => {
-                    handleInputChange('jurisdiction', option.jurisdiction);
-                    handleInputChange('companyType', option.type);
-                  }}
-                  className={`
-                    p-6 rounded-lg border-2 text-left transition-all relative
-                    ${formData.jurisdiction === option.jurisdiction
-                      ? 'border-blue-500 bg-blue-500/10'
-                      : 'border-gray-700 hover:border-gray-600'
-                    }
-                  `}
-                >
-                  {option.badge && (
-                    <div className="absolute top-3 right-3 text-xs bg-gradient-to-r from-orange-500 to-red-500 text-white px-2 py-1 rounded-full font-bold">
-                      {option.badge}
-                    </div>
-                  )}
-                  <div className="text-lg font-semibold mb-2" style={{ color: 'var(--text-primary)' }}>
-                    {option.label}
+            
+            {/* UK Package Card */}
+            <div className="p-6 rounded-lg border-2 border-blue-500 bg-blue-500/10 relative mb-6">
+              <div className="absolute top-3 right-3 text-xs bg-gradient-to-r from-orange-500 to-red-500 text-white px-2 py-1 rounded-full font-bold">
+                🔥 Privacy Package
+              </div>
+              <div className="flex items-center gap-3 mb-4">
+                <span className="text-4xl">🇬🇧</span>
+                <div>
+                  <div className="text-lg font-semibold" style={{ color: 'var(--text-primary)' }}>
+                    United Kingdom Ltd Company
                   </div>
-                  <div className="text-2xl font-bold mb-3" style={{ color: 'var(--accent-blue)' }}>
-                    {option.price}
+                  <div className="text-2xl font-bold" style={{ color: 'var(--accent-blue)' }}>
+                    KES 25,000
                   </div>
-                  <ul className="space-y-1 text-sm" style={{ color: 'var(--text-secondary)' }}>
-                    {option.features.map((feature, idx) => (
-                      <li key={idx} className="flex items-center gap-2">
-                        <Check className="w-4 h-4 text-green-500" />
-                        {feature}
-                      </li>
-                    ))}
-                  </ul>
-                </button>
-              ))}
+                </div>
+              </div>
+              <ul className="space-y-2 text-sm" style={{ color: 'var(--text-secondary)' }}>
+                <li className="flex items-center gap-2">
+                  <Check className="w-4 h-4 text-green-500" />
+                  London office address (71-75 Shelton Street, Covent Garden)
+                </li>
+                <li className="flex items-center gap-2">
+                  <Check className="w-4 h-4 text-green-500" />
+                  Your Kenyan address stays 100% private
+                </li>
+                <li className="flex items-center gap-2">
+                  <Check className="w-4 h-4 text-green-500" />
+                  24-48 hour processing time
+                </li>
+                <li className="flex items-center gap-2">
+                  <Check className="w-4 h-4 text-green-500" />
+                  Wise banking fast-track eligible
+                </li>
+                <li className="flex items-center gap-2">
+                  <Check className="w-4 h-4 text-green-500" />
+                  Digital certificate delivered via email
+                </li>
+              </ul>
+            </div>
+
+            {/* What's included */}
+            <div className="p-4 rounded-lg" style={{ background: 'var(--bg-secondary)' }}>
+              <div className="flex items-start gap-3">
+                <Shield className="w-5 h-5 mt-0.5" style={{ color: 'var(--success)' }} />
+                <div className="text-sm" style={{ color: 'var(--text-secondary)' }}>
+                  <p className="font-semibold mb-1">Powered by Rapid Formations</p>
+                  <p style={{ color: 'var(--text-muted)' }}>
+                    UK's leading company formation agent. Your data is secure and compliant with Companies House requirements.
+                  </p>
+                </div>
+              </div>
             </div>
           </div>
         )}

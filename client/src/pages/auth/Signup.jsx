@@ -51,7 +51,7 @@ export default function Signup() {
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-slate-900 via-blue-900 to-slate-900 p-4">
+    <div className="min-h-screen flex items-center justify-center bg-forest-950 p-4">
       <div className="w-full max-w-md">
         {/* Compact Card */}
         <div className="backdrop-blur-xl bg-white/10 border border-white/20 rounded-2xl shadow-2xl p-8">
@@ -109,7 +109,7 @@ export default function Signup() {
             <button
               type="submit"
               disabled={loading}
-              className="w-full py-3 bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 text-white font-semibold rounded-lg shadow-lg hover:shadow-xl transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
+              className="w-full py-3 bg-forest-900 hover:bg-forest-800 text-white font-semibold rounded-lg shadow-lg hover:shadow-xl transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
             >
               {loading ? 'Creating account...' : 'Sign Up'}
             </button>
@@ -128,11 +128,6 @@ export default function Signup() {
             </div>
           </div>
         </div>
-
-        {/* Footer - Outside card */}
-        <p className="text-center text-white/50 text-xs mt-6">
-          Secure authentication powered by Supabase
-        </p>
       </div>
     </div>
   );

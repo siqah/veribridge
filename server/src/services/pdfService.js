@@ -7,6 +7,54 @@ import { existsSync } from "fs";
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
 
+// Singleton browser instance to avoid repeated launches
+let browserInstance = null;
+let browserLaunchPromise = null;
+
+/**
+ * Get or create a reusable browser instance
+ */
+async function getBrowser() {
+  if (browserInstance && browserInstance.isConnected()) {
+    return browserInstance;
+  }
+
+  // Prevent multiple simultaneous launches
+  if (browserLaunchPromise) {
+    return browserLaunchPromise;
+  }
+
+  browserLaunchPromise = puppeteer.launch({
+    headless: "new",
+    args: [
+      "--no-sandbox",
+      "--disable-setuid-sandbox",
+      "--disable-dev-shm-usage",
+      "--disable-accelerated-2d-canvas",
+      "--no-first-run",
+      "--no-zygote",
+      "--single-process",
+      "--disable-gpu",
+    ],
+    timeout: 30000,
+  });
+
+  try {
+    browserInstance = await browserLaunchPromise;
+
+    // Handle browser disconnection
+    browserInstance.on("disconnected", () => {
+      browserInstance = null;
+      browserLaunchPromise = null;
+    });
+
+    return browserInstance;
+  } catch (error) {
+    browserLaunchPromise = null;
+    throw error;
+  }
+}
+
 /**
  * Generate professional invoice PDF using Puppeteer
  */
@@ -36,37 +84,73 @@ export async function generateInvoicePDF(invoiceData) {
   // Create HTML template
   const html = generateInvoiceHTML(invoiceData);
 
-  // Launch browser and generate PDF
-  const browser = await puppeteer.launch({
-    headless: "new",
-    args: ["--no-sandbox", "--disable-setuid-sandbox"],
-  });
+  let page = null;
+  let retries = 2;
 
-  try {
-    const page = await browser.newPage();
-    await page.setContent(html, { waitUntil: "networkidle0" });
+  while (retries > 0) {
+    try {
+      const browser = await getBrowser();
+      page = await browser.newPage();
 
-    await page.pdf({
-      path: filepath,
-      format: "A4",
-      printBackground: true,
-      margin: {
-        top: "20mm",
-        right: "15mm",
-        bottom: "20mm",
-        left: "15mm",
-      },
-    });
+      // Set a timeout for content loading
+      await page.setContent(html, {
+        waitUntil: "domcontentloaded",
+        timeout: 10000,
+      });
 
-    console.log(`✅ Invoice PDF generated: ${filename}`);
+      await page.pdf({
+        path: filepath,
+        format: "A4",
+        printBackground: true,
+        margin: {
+          top: "20mm",
+          right: "15mm",
+          bottom: "20mm",
+          left: "15mm",
+        },
+        timeout: 15000,
+      });
 
-    return {
-      filename,
-      filepath,
-      url: `/invoices/${filename}`,
-    };
-  } finally {
-    await browser.close();
+      console.log(`✅ Invoice PDF generated: ${filename}`);
+
+      return {
+        filename,
+        filepath,
+        url: `/invoices/${filename}`,
+      };
+    } catch (error) {
+      retries--;
+      console.error(
+        `PDF generation attempt failed (${retries} retries left):`,
+        error.message
+      );
+
+      // Close the browser and reset for retry
+      if (browserInstance) {
+        try {
+          await browserInstance.close();
+        } catch (e) {
+          // Ignore close errors
+        }
+        browserInstance = null;
+        browserLaunchPromise = null;
+      }
+
+      if (retries === 0) {
+        throw error;
+      }
+
+      // Wait briefly before retry
+      await new Promise((resolve) => setTimeout(resolve, 1000));
+    } finally {
+      if (page) {
+        try {
+          await page.close();
+        } catch (e) {
+          // Ignore page close errors
+        }
+      }
+    }
   }
 }
 

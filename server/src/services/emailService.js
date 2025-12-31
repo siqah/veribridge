@@ -429,3 +429,127 @@ If you didn't request a password reset, you can safely ignore this email.
     throw error;
   }
 }
+
+/**
+ * Send payment reminder email for invoice
+ */
+export async function sendPaymentReminderEmail(reminderData) {
+  const transporter = createTransporter();
+
+  const {
+    to,
+    invoiceNumber,
+    clientName,
+    amount,
+    currency,
+    dueDate,
+    portalLink,
+    reminderType,
+    businessName,
+  } = reminderData;
+
+  // Get urgency based on reminder type
+  const urgencyConfig = {
+    before_due: { color: "#3b82f6", emoji: "📅", urgency: "" },
+    on_due: { color: "#f59e0b", emoji: "⏰", urgency: "Payment Due Today" },
+    overdue_7: { color: "#ef4444", emoji: "⚠️", urgency: "7 Days Overdue" },
+    overdue_14: {
+      color: "#dc2626",
+      emoji: "🚨",
+      urgency: "URGENT: 14 Days Overdue",
+    },
+  };
+
+  const config = urgencyConfig[reminderType] || urgencyConfig.before_due;
+  const formattedAmount = `${currency} ${Number(amount).toLocaleString()}`;
+  const formattedDueDate = dueDate
+    ? new Date(dueDate).toLocaleDateString("en-GB", {
+        day: "numeric",
+        month: "long",
+        year: "numeric",
+      })
+    : "Not specified";
+
+  const subject = config.urgency
+    ? `${config.emoji} ${config.urgency}: Invoice ${invoiceNumber}`
+    : `📅 Payment Reminder: Invoice ${invoiceNumber}`;
+
+  const html = `
+    <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; background: #f8fafc; padding: 20px;">
+      <div style="background: white; border-radius: 12px; padding: 30px; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
+        <h2 style="color: ${config.color}; margin-top: 0;">${config.emoji} Payment Reminder</h2>
+        
+        <p>Dear ${clientName},</p>
+        
+        <p>This is a reminder about your outstanding invoice from <strong>${businessName}</strong>.</p>
+        
+        <div style="background: #f1f5f9; padding: 20px; border-radius: 8px; margin: 20px 0;">
+          <p style="margin: 0 0 10px 0;"><strong>Invoice:</strong> ${invoiceNumber}</p>
+          <p style="margin: 0 0 10px 0;"><strong>Amount Due:</strong> <span style="color: ${config.color}; font-size: 1.2em; font-weight: bold;">${formattedAmount}</span></p>
+          <p style="margin: 0;"><strong>Due Date:</strong> ${formattedDueDate}</p>
+        </div>
+        
+        <div style="text-align: center; margin: 30px 0;">
+          <a href="${portalLink}" style="display: inline-block; background: ${config.color}; color: white; padding: 14px 28px; border-radius: 8px; text-decoration: none; font-weight: bold;">
+            View &amp; Pay Invoice
+          </a>
+        </div>
+        
+        <p style="color: #64748b; font-size: 14px;">
+          If you have already made this payment, please disregard this email. 
+          For any questions, please contact us.
+        </p>
+        
+        <hr style="border: none; border-top: 1px solid #e2e8f0; margin: 20px 0;">
+        
+        <p style="color: #94a3b8; font-size: 12px; margin: 0;">
+          This email was sent by ${businessName} via VeriBridge.
+        </p>
+      </div>
+    </div>
+  `;
+
+  const text = `
+Payment Reminder - Invoice ${invoiceNumber}
+
+Dear ${clientName},
+
+This is a reminder about your outstanding invoice from ${businessName}.
+
+Invoice: ${invoiceNumber}
+Amount Due: ${formattedAmount}
+Due Date: ${formattedDueDate}
+
+View and pay your invoice here:
+${portalLink}
+
+If you have already made this payment, please disregard this email.
+
+Thank you,
+${businessName}
+  `;
+
+  if (!transporter) {
+    console.log("\n📧 PAYMENT REMINDER EMAIL (Not sent - SMTP not configured)");
+    console.log(`To: ${to}`);
+    console.log(`Subject: ${subject}`);
+    console.log(text);
+    return { success: true, demo: true };
+  }
+
+  try {
+    await transporter.sendMail({
+      from: `"${businessName}" <${process.env.SMTP_USER}>`,
+      to,
+      subject,
+      text,
+      html,
+    });
+
+    console.log(`✅ Payment reminder sent for ${invoiceNumber} to ${to}`);
+    return { success: true };
+  } catch (error) {
+    console.error("❌ Failed to send payment reminder:", error.message);
+    throw error;
+  }
+}

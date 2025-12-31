@@ -12,7 +12,8 @@ if (process.env.NODE_ENV === "production") {
   // In development, use global to prevent hot-reload from creating new instances
   if (!global.prisma) {
     global.prisma = new PrismaClient({
-      log: ["query", "info", "warn", "error"],
+      // Reduced logging for better performance - enable ["query"] only when debugging
+      log: ["warn", "error"],
     });
   }
   prisma = global.prisma;

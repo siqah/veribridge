@@ -15,11 +15,14 @@ import authRoutes from "./routes/auth.js";
 import companyOrdersRoutes from "./routes/companyOrders.js";
 import formationRoutes from "./routes/formation.js";
 import invoicesRoutes from "./routes/invoices.js";
+import recurringRoutes from "./routes/recurring.js";
 import mailboxRoutes from "./routes/mailbox.js";
 import apiKeysRoutes from "./routes/apiKeys.js";
 import addressApiRoutes from "./routes/addressApi.js";
 import uploadRoutes from "./routes/upload.js";
 import usersRoutes from "./routes/users.js";
+import profileRoutes from "./routes/profile.js";
+import portalRoutes from "./routes/portal.js";
 
 const app = express();
 const PORT = process.env.PORT || 3001;
@@ -62,11 +65,14 @@ app.use("/api/auth", authRoutes);
 app.use("/api/company-orders", companyOrdersRoutes); // Legacy
 app.use("/api/formation", formationRoutes); // New formation engine
 app.use("/api/invoices", invoicesRoutes);
+app.use("/api/recurring", recurringRoutes); // Recurring invoices
 app.use("/api/mailbox", mailboxRoutes);
 app.use("/api/keys", apiKeysRoutes);
 app.use("/api/v1", addressApiRoutes); // B2B API
 app.use("/api/upload", uploadRoutes); // File uploads
 app.use("/api/users", usersRoutes); // User management
+app.use("/api/profile", profileRoutes); // User profile
+app.use("/api/portal", portalRoutes); // Public invoice portal
 
 // Public verification page (for QR codes)
 app.get("/verify/:id", async (req, res) => {

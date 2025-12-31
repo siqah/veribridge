@@ -53,21 +53,7 @@ export default function Dashboard() {
       color: 'green',
       href: '/mailbox'
     },
-    {
-      title: 'API Keys',
-      description: 'Integrate our services via API',
-      icon: Key,
-      color: 'indigo',
-      href: '/api-keys'
-    },
-    {
-      title: 'Verification Tools',
-      description: 'Access free verification tools',
-      icon: Package,
-      color: 'pink',
-      href: '/address-builder',
-      free: true
-    },
+  
   ];
 
   return (

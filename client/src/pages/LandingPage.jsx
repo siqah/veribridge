@@ -59,13 +59,7 @@ export default function LandingPage() {
       href: '/invoicing',
       protected: true
     },
-    {
-      title: 'Business API',
-      description: 'Clean and format international customer addresses via our REST API.',
-      icon: Key,
-      href: '/api-keys',
-      protected: true
-    },
+
   ];
 
   return (

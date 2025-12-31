@@ -22,7 +22,7 @@ export default function AppLayout() {
     const map = {
       '/': 'Home',
       '/dashboard': 'Dashboard',
-      '/address-builder': 'Address Architect',
+      '/address-verification': 'Address Architect',
       '/company-formation': 'Company Formation',
       '/invoicing': 'Invoicing Suite',
       '/mailbox': 'Digital Mailbox',
@@ -47,16 +47,15 @@ export default function AppLayout() {
     {
       label: 'Verification',
       items: [
-        { path: '/address-builder', title: 'Address Architect', icon: MapPin },
+        { path: '/address-verification', title: 'Address Architect', icon: MapPin },
       ]
     },
     {
       label: 'Global Business',
       items: [
-        { path: '/company-formation', title: 'Company Formation', icon: Building2, badge: 'Hot' },
+        { path: '/company-formation', title: 'UK Company Formation', icon: Building2, badge: 'Hot' },
         { path: '/invoicing', title: 'Invoicing', icon: FileText },
         { path: '/mailbox', title: 'Digital Mailbox', icon: Mail },
-        { path: '/api-keys', title: 'API Keys', icon: Key },
       ]
     }
   ];
@@ -76,10 +75,10 @@ export default function AppLayout() {
         </div>
 
         {/* Navigation Items */}
-        <div className="flex-1 overflow-y-auto py-6 px-3 space-y-8 custom-scrollbar">
+        <div className="flex-1 overflow-y-auto py-4 px-3 space-y-6 custom-scrollbar">
           {navGroups.map((group, idx) => (
             <div key={idx}>
-              <h3 className="px-3 text-xs font-semibold uppercase tracking-wider mb-2" style={{ color: 'var(--text-muted)' }}>
+              <h3 className="px-3 text-[11px] font-semibold uppercase tracking-wider mb-3 opacity-60" style={{ color: 'var(--text-muted)' }}>
                 {group.label}
               </h3>
               <div className="space-y-1">
@@ -90,22 +89,22 @@ export default function AppLayout() {
                       key={item.path}
                       onClick={() => navigate(item.path)}
                       className={`
-                        w-full flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium transition-all duration-200
+                        w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-all duration-200
                         ${isActive 
                           ? 'bg-blue-600/10 text-blue-400' 
                           : 'hover:bg-white/5'}
                       `}
                       style={!isActive ? { color: 'var(--text-secondary)' } : {}}
                     >
-                      <item.icon className={`w-4 h-4 ${isActive ? 'text-blue-400' : ''}`} style={!isActive ? { color: 'var(--text-muted)' } : {}} />
-                      <span>{item.title}</span>
+                      <item.icon className={`w-5 h-5 flex-shrink-0 ${isActive ? 'text-blue-400' : ''}`} style={!isActive ? { color: 'var(--text-muted)' } : {}} />
+                      <span className="flex-1 text-left">{item.title}</span>
                       {item.badge && (
-                        <span className="ml-auto text-[10px] font-bold bg-gradient-to-r from-blue-500 to-purple-500 text-white px-2 py-0.5 rounded-full">
+                        <span className="text-[10px] font-bold bg-gradient-to-r from-orange-500 to-red-500 text-white px-1.5 py-0.5 rounded-full">
                           {item.badge}
                         </span>
                       )}
-                      {isActive && (
-                        <div className="ml-auto w-1.5 h-1.5 rounded-full bg-blue-500 shadow-[0_0_8px_rgba(59,130,246,0.8)]" />
+                      {isActive && !item.badge && (
+                        <div className="w-1.5 h-1.5 rounded-full bg-blue-500 shadow-[0_0_8px_rgba(59,130,246,0.8)]" />
                       )}
                     </button>
                   );
