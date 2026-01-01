@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Building2, ChevronRight, CheckCircle, AlertCircle, Search, Loader, Shield, X, Check } from 'lucide-react';
+import { Building2, ChevronRight, CheckCircle, AlertCircle, Search, Loader, Shield, X, Check, Upload, FileText } from 'lucide-react';
 import axios from 'axios';
 import { useAuth } from '../../contexts/AuthContext';
 import PaystackCheckout from '../../components/PaystackCheckout';
@@ -21,13 +21,20 @@ const CompanyFormation = () => {
     companyName: '',
     altName1: '',
     altName2: '',
-    directorName: '',
+    // Director Details
+    directorFirstName: '',
+    directorLastName: '',
     directorDob: '', // Date of Birth (required by IN01)
     nationality: 'Kenyan', // Default to Kenyan
     directorEmail: user?.email || '', // Pre-fill with user email
     directorPhone: '',
-    directorAddress: '',
     occupation: '', // e.g., "Software Developer"
+    // Director Residential Address (kept private with Privacy Package)
+    addressStreet: '',
+    addressCity: '',
+    addressPostcode: '',
+    addressCountry: 'Kenya', // Default to Kenya
+    // SIC Code
     sicCode: '62020', // Default to IT Consultancy
     customSicCode: '',
     // Security Questions (UK Government requirement for digital signature)
@@ -144,9 +151,9 @@ const CompanyFormation = () => {
         return formData.companyName && formData.altName1 && formData.altName2;
       case 3:
         if (formData.jurisdiction === 'UK') {
-          return formData.directorName && formData.directorDob && formData.nationality && formData.directorEmail && formData.directorAddress && formData.occupation;
+          return formData.directorFirstName && formData.directorLastName && formData.directorDob && formData.nationality && formData.directorEmail && formData.addressStreet && formData.addressCity && formData.occupation;
         }
-        return formData.directorName && formData.directorEmail && formData.directorAddress && formData.occupation;
+        return formData.directorFirstName && formData.directorEmail && formData.addressStreet && formData.occupation;
       case 4:
         // Security questions - UK only
         if (formData.jurisdiction === 'UK') {
@@ -241,15 +248,27 @@ const CompanyFormation = () => {
             setCurrentStep(1);
             setOrderId(null);
             setFormData({
-              jurisdiction: '',
-              companyType: '',
+              jurisdiction: 'UK',
+              companyType: 'LTD',
               companyName: '',
               altName1: '',
               altName2: '',
-              directorName: '',
+              directorFirstName: '',
+              directorLastName: '',
+              directorDob: '',
+              nationality: 'Kenyan',
               directorEmail: '',
               directorPhone: '',
-              directorAddress: '',
+              occupation: '',
+              addressStreet: '',
+              addressCity: '',
+              addressPostcode: '',
+              addressCountry: 'Kenya',
+              sicCode: '62020',
+              customSicCode: '',
+              townOfBirth: '',
+              mothersMaidenName: '',
+              fathersFirstName: '',
               industryCode: ''
             });
           }}
@@ -538,66 +557,82 @@ const CompanyFormation = () => {
               Director Information
             </h2>
             <p className="text-sm mb-6" style={{ color: 'var(--text-secondary)' }}>
-              Required for company registration (kept confidential)
+              As it appears on your passport (kept confidential with Privacy Package)
             </p>
 
             <div className="space-y-4">
-              <div>
-                <label className="block text-sm font-medium mb-2" style={{ color: 'var(--text-secondary)' }}>
-                  Full Name (as on passport)
-                </label>
-                <input
-                  type="text"
-                  value={formData.directorName}
-                  onChange={(e) => handleInputChange('directorName', e.target.value)}
-                  placeholder="John Doe"
-                  className="input-field w-full"
-                />
+              {/* Full Name - Split into First and Last */}
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-sm font-medium mb-2" style={{ color: 'var(--text-secondary)' }}>
+                    First Name *
+                  </label>
+                  <input
+                    type="text"
+                    value={formData.directorFirstName}
+                    onChange={(e) => handleInputChange('directorFirstName', e.target.value)}
+                    placeholder="John"
+                    className="input-field w-full"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium mb-2" style={{ color: 'var(--text-secondary)' }}>
+                    Last Name *
+                  </label>
+                  <input
+                    type="text"
+                    value={formData.directorLastName}
+                    onChange={(e) => handleInputChange('directorLastName', e.target.value)}
+                    placeholder="Doe"
+                    className="input-field w-full"
+                  />
+                </div>
               </div>
 
-              {/* Date of Birth - Required by IN01 */}
-              {formData.jurisdiction === 'UK' && (
-                <div className="grid grid-cols-2 gap-4">
-                  <div>
-                    <label className="block text-sm font-medium mb-2" style={{ color: 'var(--text-secondary)' }}>
-                      Date of Birth
-                    </label>
-                    <input
-                      type="date"
-                      value={formData.directorDob}
-                      onChange={(e) => handleInputChange('directorDob', e.target.value)}
-                      className="input-field w-full"
-                      max={new Date(new Date().setFullYear(new Date().getFullYear() - 16)).toISOString().split('T')[0]}
-                    />
-                    <p className="text-xs mt-1" style={{ color: 'var(--text-muted)' }}>
-                      Must be 16+ years old
-                    </p>
-                  </div>
-
-                  <div>
-                    <label className="block text-sm font-medium mb-2" style={{ color: 'var(--text-secondary)' }}>
-                      Nationality
-                    </label>
-                    <select
-                      value={formData.nationality}
-                      onChange={(e) => handleInputChange('nationality', e.target.value)}
-                      className="input-field w-full"
-                    >
-                      <option value="Kenyan">Kenyan</option>
-                      <option value="Nigerian">Nigerian</option>
-                      <option value="Ghanaian">Ghanaian</option>
-                      <option value="South African">South African</option>
-                      <option value="Ugandan">Ugandan</option>
-                      <option value="Tanzanian">Tanzanian</option>
-                      <option value="Other">Other</option>
-                    </select>
-                  </div>
+              {/* Date of Birth & Nationality */}
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-sm font-medium mb-2" style={{ color: 'var(--text-secondary)' }}>
+                    Date of Birth *
+                  </label>
+                  <input
+                    type="date"
+                    value={formData.directorDob}
+                    onChange={(e) => handleInputChange('directorDob', e.target.value)}
+                    className="input-field w-full"
+                    max={new Date(new Date().setFullYear(new Date().getFullYear() - 16)).toISOString().split('T')[0]}
+                  />
+                  <p className="text-xs mt-1" style={{ color: 'var(--text-muted)' }}>
+                    Must be 16+ years old
+                  </p>
                 </div>
-              )}
 
+                <div>
+                  <label className="block text-sm font-medium mb-2" style={{ color: 'var(--text-secondary)' }}>
+                    Nationality *
+                  </label>
+                  <select
+                    value={formData.nationality}
+                    onChange={(e) => handleInputChange('nationality', e.target.value)}
+                    className="input-field w-full"
+                  >
+                    <option value="Kenyan">Kenyan</option>
+                    <option value="Nigerian">Nigerian</option>
+                    <option value="Ghanaian">Ghanaian</option>
+                    <option value="South African">South African</option>
+                    <option value="Ugandan">Ugandan</option>
+                    <option value="Tanzanian">Tanzanian</option>
+                    <option value="Rwandan">Rwandan</option>
+                    <option value="Ethiopian">Ethiopian</option>
+                    <option value="Other">Other</option>
+                  </select>
+                </div>
+              </div>
+
+              {/* Occupation */}
               <div>
                 <label className="block text-sm font-medium mb-2" style={{ color: 'var(--text-secondary)' }}>
-                  Occupation
+                  Occupation *
                 </label>
                 <input
                   type="text"
@@ -611,53 +646,112 @@ const CompanyFormation = () => {
                 </p>
               </div>
 
-              <div>
-                <label className="block text-sm font-medium mb-2" style={{ color: 'var(--text-secondary)' }}>
-                  Email Address
-                </label>
-                <input
-                  type="email"
-                  value={formData.directorEmail}
-                  onChange={(e) => handleInputChange('directorEmail', e.target.value)}
-                  placeholder="john@example.com"
-                  className="input-field w-full"
-                />
+              {/* Contact Details */}
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-sm font-medium mb-2" style={{ color: 'var(--text-secondary)' }}>
+                    Email Address *
+                  </label>
+                  <input
+                    type="email"
+                    value={formData.directorEmail}
+                    onChange={(e) => handleInputChange('directorEmail', e.target.value)}
+                    placeholder="john@example.com"
+                    className="input-field w-full"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium mb-2" style={{ color: 'var(--text-secondary)' }}>
+                    Phone Number
+                  </label>
+                  <input
+                    type="tel"
+                    value={formData.directorPhone}
+                    onChange={(e) => handleInputChange('directorPhone', e.target.value)}
+                    placeholder="+254 700 123 456"
+                    className="input-field w-full"
+                  />
+                </div>
               </div>
 
-              <div>
-                <label className="block text-sm font-medium mb-2" style={{ color: 'var(--text-secondary)' }}>
-                  Phone Number
-                </label>
-                <input
-                  type="tel"
-                  value={formData.directorPhone}
-                  onChange={(e) => handleInputChange('directorPhone', e.target.value)}
-                  placeholder="+254 700 123 456"
-                  className="input-field w-full"
-                />
+              {/* Residential Address Section */}
+              <div className="pt-4 border-t" style={{ borderColor: 'var(--border-color)' }}>
+                <h3 className="text-sm font-semibold mb-3" style={{ color: 'var(--text-primary)' }}>
+                  Residential Address (Kenya)
+                </h3>
+                
+                <div className="space-y-3">
+                  <div>
+                    <label className="block text-sm font-medium mb-2" style={{ color: 'var(--text-secondary)' }}>
+                      Street Address *
+                    </label>
+                    <input
+                      type="text"
+                      value={formData.addressStreet}
+                      onChange={(e) => handleInputChange('addressStreet', e.target.value)}
+                      placeholder="123 Valley Road, Westlands"
+                      className="input-field w-full"
+                    />
+                  </div>
+
+                  <div className="grid grid-cols-2 gap-4">
+                    <div>
+                      <label className="block text-sm font-medium mb-2" style={{ color: 'var(--text-secondary)' }}>
+                        City *
+                      </label>
+                      <input
+                        type="text"
+                        value={formData.addressCity}
+                        onChange={(e) => handleInputChange('addressCity', e.target.value)}
+                        placeholder="Nairobi"
+                        className="input-field w-full"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium mb-2" style={{ color: 'var(--text-secondary)' }}>
+                        Postal Code
+                      </label>
+                      <input
+                        type="text"
+                        value={formData.addressPostcode}
+                        onChange={(e) => handleInputChange('addressPostcode', e.target.value)}
+                        placeholder="00100"
+                        className="input-field w-full"
+                      />
+                    </div>
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium mb-2" style={{ color: 'var(--text-secondary)' }}>
+                      Country
+                    </label>
+                    <select
+                      value={formData.addressCountry}
+                      onChange={(e) => handleInputChange('addressCountry', e.target.value)}
+                      className="input-field w-full"
+                    >
+                      <option value="Kenya">Kenya</option>
+                      <option value="Nigeria">Nigeria</option>
+                      <option value="Ghana">Ghana</option>
+                      <option value="South Africa">South Africa</option>
+                      <option value="Uganda">Uganda</option>
+                      <option value="Tanzania">Tanzania</option>
+                      <option value="Rwanda">Rwanda</option>
+                      <option value="Other">Other</option>
+                    </select>
+                  </div>
+                </div>
               </div>
 
-              <div>
-                <label className="block text-sm font-medium mb-2" style={{ color: 'var(--text-secondary)' }}>
-                  Residential Address
-                </label>
-                <textarea
-                  value={formData.directorAddress}
-                  onChange={(e) => handleInputChange('directorAddress', e.target.value)}
-                  placeholder="123 Valley Road, Westlands, Nairobi, Kenya"
-                  className="input-field w-full"
-                  rows="3"
-                />
-              </div>
-
+              {/* Privacy Notice */}
               <div className="p-4 rounded-lg" style={{ background: 'var(--bg-secondary)' }}>
                 <div className="flex items-start gap-3">
                   <Shield className="w-5 h-5 mt-0.5" style={{ color: 'var(--success)' }} />
                   <div className="text-sm" style={{ color: 'var(--text-secondary)' }}>
-                    <p className="font-semibold mb-1">Your Kenyan address is private</p>
+                    <p className="font-semibold mb-1">🔒 Your Kenyan address stays 100% private</p>
                     <p style={{ color: 'var(--text-muted)' }}>
-                      We provide a registered office address in {formData.jurisdiction === 'UK' ? 'London' : 'Delaware'} for
-                      public records. Your home address is kept confidential.
+                      Our Privacy Package provides a London registered office at 71-75 Shelton Street, Covent Garden.
+                      Your home address is only used for director records (not publicly visible).
                     </p>
                   </div>
                 </div>
@@ -737,6 +831,78 @@ const CompanyFormation = () => {
                   </div>
                 </div>
               </div>
+
+              {/* KYC Document Upload Section */}
+              <div className="pt-6 border-t" style={{ borderColor: 'var(--border-color)' }}>
+                <h3 className="text-lg font-semibold mb-2" style={{ color: 'var(--text-primary)' }}>
+                  Identity Verification Documents
+                </h3>
+                <p className="text-sm mb-4" style={{ color: 'var(--text-muted)' }}>
+                  Required by UK AML regulations. Upload after payment or email to support@veribridge.co.ke
+                </p>
+
+                <div className="grid gap-4 md:grid-cols-2">
+                  {/* Passport/ID Upload */}
+                  <div className="p-4 rounded-lg border-2 border-dashed" style={{ borderColor: 'var(--border-color)' }}>
+                    <div className="flex items-start gap-3">
+                      <div className="p-2 rounded-lg" style={{ background: 'var(--bg-secondary)' }}>
+                        <Upload className="w-5 h-5" style={{ color: 'var(--accent-blue)' }} />
+                      </div>
+                      <div className="flex-1">
+                        <p className="font-medium text-sm" style={{ color: 'var(--text-primary)' }}>
+                          Passport or National ID
+                        </p>
+                        <p className="text-xs mt-1" style={{ color: 'var(--text-muted)' }}>
+                          Clear photo/scan of your ID document
+                        </p>
+                        <input
+                          type="file"
+                          accept="image/*,.pdf"
+                          className="mt-2 text-xs w-full"
+                          style={{ color: 'var(--text-secondary)' }}
+                          onChange={(e) => {
+                            if (e.target.files?.[0]) {
+                              handleInputChange('idDocument', e.target.files[0]);
+                            }
+                          }}
+                        />
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Proof of Address Upload */}
+                  <div className="p-4 rounded-lg border-2 border-dashed" style={{ borderColor: 'var(--border-color)' }}>
+                    <div className="flex items-start gap-3">
+                      <div className="p-2 rounded-lg" style={{ background: 'var(--bg-secondary)' }}>
+                        <FileText className="w-5 h-5" style={{ color: 'var(--accent-blue)' }} />
+                      </div>
+                      <div className="flex-1">
+                        <p className="font-medium text-sm" style={{ color: 'var(--text-primary)' }}>
+                          Proof of Address
+                        </p>
+                        <p className="text-xs mt-1" style={{ color: 'var(--text-muted)' }}>
+                          Bank statement or utility bill (last 3 months)
+                        </p>
+                        <input
+                          type="file"
+                          accept="image/*,.pdf"
+                          className="mt-2 text-xs w-full"
+                          style={{ color: 'var(--text-secondary)' }}
+                          onChange={(e) => {
+                            if (e.target.files?.[0]) {
+                              handleInputChange('addressDocument', e.target.files[0]);
+                            }
+                          }}
+                        />
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                <p className="text-xs mt-3" style={{ color: 'var(--text-muted)' }}>
+                  💡 These documents are optional now but will be required before we can submit your order to Rapid Formations.
+                </p>
+              </div>
             </div>
 
             {/* Navigation Buttons for Step 4 */}
@@ -782,7 +948,7 @@ const CompanyFormation = () => {
                 <div className="flex justify-between">
                   <span style={{ color: 'var(--text-muted)' }}>Director:</span>
                   <span style={{ color: 'var(--text-primary)' }} className="font-medium">
-                    {formData.directorName}
+                    {formData.directorFirstName} {formData.directorLastName}
                   </span>
                 </div>
                 <div className="flex justify-between">

@@ -20,6 +20,7 @@ import DigitalMailbox from '../pages/business/DigitalMailbox';
 import MailboxSubscription from '../pages/business/MailboxSubscription';
 // ApiKeys feature removed
 import MyOrders from '../pages/business/MyOrders';
+import ProfileSettings from '../pages/business/ProfileSettings';
 
 // Admin Pages
 import FormationOrders from '../pages/admin/FormationOrders';
@@ -77,7 +78,7 @@ export const appLayoutRoutes = {
     { path: 'recurring-invoices', element: RecurringInvoices, protected: true },
     { path: 'mailbox', element: DigitalMailbox, protected: true },
     { path: 'mailbox/subscribe', element: MailboxSubscription, protected: true },
-
+    { path: 'settings', element: ProfileSettings, protected: true },
   ],
   
   // Admin (admin only)

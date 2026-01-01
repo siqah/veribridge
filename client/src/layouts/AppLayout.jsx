@@ -116,8 +116,11 @@ export default function AppLayout() {
 
         {/* User Profile Footer */}
         <div className="p-4 border-t" style={{ borderColor: 'var(--border-color)' }}>
-          <div className="flex items-center gap-3 p-2 rounded-lg hover:bg-white/5 transition-colors cursor-pointer group">
-             <div className="w-8 h-8 rounded-full bg-gradient-to-tr from-blue-500 to-purple-500 p-[1px]">
+          <div 
+            onClick={() => navigate('/settings')}
+            className="flex items-center gap-3 p-2 rounded-lg hover:bg-white/5 transition-colors cursor-pointer group"
+          >
+             <div className="w-8 h-8 rounded-full bg-gradient-to-tr from-emerald-500 to-teal-500 p-[1px]">
                 <div className="w-full h-full rounded-full flex items-center justify-center text-xs font-bold text-white" style={{ background: 'var(--bg-primary)' }}>
                   {user?.email?.[0].toUpperCase() || 'U'}
                 </div>
@@ -126,7 +129,7 @@ export default function AppLayout() {
                <p className="text-sm font-medium truncate" style={{ color: 'var(--text-primary)' }}>{user?.user_metadata?.full_name || 'User'}</p>
                <p className="text-xs truncate" style={{ color: 'var(--text-muted)' }}>{user?.email}</p>
              </div>
-             <Settings className="w-4 h-4 transition-colors" style={{ color: 'var(--text-muted)' }} />
+             <Settings className="w-4 h-4 transition-colors group-hover:rotate-90 duration-300" style={{ color: 'var(--text-muted)' }} />
           </div>
         </div>
       </aside>

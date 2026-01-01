@@ -241,7 +241,7 @@ const Invoicing = () => {
     return (
       <div className="max-w-6xl mx-auto space-y-6">
         {/* Header */}
-        <div className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-violet-600 via-purple-600 to-indigo-700 p-8">
+        <div className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-emerald-600 via-teal-600 to-green-700 p-8">
           <div className="absolute top-0 right-0 w-96 h-96 bg-white/10 rounded-full blur-3xl -translate-y-1/2 translate-x-1/2" />
           
           <div className="relative z-10 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
@@ -251,12 +251,12 @@ const Invoicing = () => {
               </div>
               <div>
                 <h1 className="text-3xl font-bold text-white">Invoicing</h1>
-                <p className="text-purple-200">Professional invoices for your business</p>
+                <p className="text-emerald-200">Professional invoices for your business</p>
               </div>
             </div>
             <button
               onClick={() => setView('create')}
-              className="flex items-center gap-2 px-6 py-3 bg-white text-purple-600 font-semibold rounded-xl hover:bg-purple-50 transition-all shadow-lg"
+              className="flex items-center gap-2 px-6 py-3 bg-white text-emerald-600 font-semibold rounded-xl hover:bg-emerald-50 transition-all shadow-lg"
             >
               <Plus className="w-5 h-5" />
               New Invoice
@@ -268,8 +268,8 @@ const Invoicing = () => {
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
           <div className="p-4 rounded-xl bg-white dark:bg-slate-800/50 border border-gray-200 dark:border-slate-700/50 shadow-sm">
             <div className="flex items-center gap-3">
-              <div className="p-2 bg-purple-100 dark:bg-purple-500/20 rounded-lg">
-                <FileText className="w-5 h-5 text-purple-600 dark:text-purple-400" />
+              <div className="p-2 bg-emerald-100 dark:bg-emerald-500/20 rounded-lg">
+                <FileText className="w-5 h-5 text-emerald-600 dark:text-emerald-400" />
               </div>
               <div>
                 <p className="text-2xl font-bold text-gray-900 dark:text-white">{stats.total}</p>
@@ -320,7 +320,7 @@ const Invoicing = () => {
               onClick={() => setFilter(status)}
               className={`px-4 py-2 rounded-lg text-sm font-medium transition-all ${
                 filter === status
-                  ? 'bg-purple-600 text-white'
+                  ? 'bg-emerald-600 text-white'
                   : 'text-gray-600 dark:text-slate-400 hover:text-gray-900 dark:hover:text-white hover:bg-gray-200 dark:hover:bg-slate-700/50'
               }`}
             >
@@ -333,14 +333,14 @@ const Invoicing = () => {
         <div className="rounded-xl bg-white dark:bg-slate-800/30 border border-gray-200 dark:border-slate-700/50 overflow-hidden shadow-sm">
           {loadingInvoices ? (
             <div className="flex items-center justify-center py-20">
-              <div className="animate-spin w-8 h-8 border-4 border-purple-500 border-t-transparent rounded-full" />
+              <div className="animate-spin w-8 h-8 border-4 border-emerald-500 border-t-transparent rounded-full" />
             </div>
           ) : filteredInvoices.length === 0 ? (
             <div className="text-center py-16">
               <FileText className="w-16 h-16 text-gray-400 dark:text-slate-600 mx-auto mb-4" />
               <h3 className="text-xl font-semibold text-gray-900 dark:text-white mb-2">No invoices yet</h3>
               <p className="text-gray-500 dark:text-slate-400 mb-6">Create your first invoice to get started</p>
-              <button onClick={() => setView('create')} className="px-6 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-500 transition-colors">
+              <button onClick={() => setView('create')} className="px-6 py-2 bg-emerald-600 text-white rounded-lg hover:bg-emerald-500 transition-colors">
                 <Plus className="w-4 h-4 inline mr-2" />
                 Create Invoice
               </button>
@@ -430,7 +430,7 @@ const Invoicing = () => {
         </div>
         {profile && (
           <div className="hidden sm:flex items-center gap-2 px-4 py-2 bg-gray-100 dark:bg-slate-800/50 rounded-xl border border-gray-200 dark:border-slate-700/50">
-            <Building className="w-4 h-4 text-purple-600 dark:text-purple-400" />
+            <Building className="w-4 h-4 text-emerald-600 dark:text-emerald-400" />
             <span className="text-sm text-gray-900 dark:text-white">{profile.businessName}</span>
           </div>
         )}
@@ -442,7 +442,7 @@ const Invoicing = () => {
           {/* Client Details */}
           <div className="p-6 rounded-xl bg-white dark:bg-slate-800/30 border border-gray-200 dark:border-slate-700/50 shadow-sm">
             <div className="flex items-center gap-2 mb-6">
-              <User className="w-5 h-5 text-purple-600 dark:text-purple-400" />
+              <User className="w-5 h-5 text-emerald-600 dark:text-emerald-400" />
               <h2 className="text-lg font-semibold text-gray-900 dark:text-white">Client Details</h2>
             </div>
             
@@ -456,7 +456,7 @@ const Invoicing = () => {
                   value={formData.clientName}
                   onChange={(e) => setFormData({ ...formData, clientName: e.target.value })}
                   placeholder="Enter client or company name"
-                  className="w-full px-4 py-3 rounded-lg bg-gray-50 dark:bg-slate-900/50 border border-gray-300 dark:border-slate-600 text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-slate-500 focus:border-purple-500 focus:ring-1 focus:ring-purple-500 outline-none transition-colors"
+                  className="w-full px-4 py-3 rounded-lg bg-gray-50 dark:bg-slate-900/50 border border-gray-300 dark:border-slate-600 text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-slate-500 focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500 outline-none transition-colors"
                 />
               </div>
 
@@ -470,7 +470,7 @@ const Invoicing = () => {
                   value={formData.clientEmail}
                   onChange={(e) => setFormData({ ...formData, clientEmail: e.target.value })}
                   placeholder="client@company.com"
-                  className="w-full px-4 py-3 rounded-lg bg-gray-50 dark:bg-slate-900/50 border border-gray-300 dark:border-slate-600 text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-slate-500 focus:border-purple-500 focus:ring-1 focus:ring-purple-500 outline-none transition-colors"
+                  className="w-full px-4 py-3 rounded-lg bg-gray-50 dark:bg-slate-900/50 border border-gray-300 dark:border-slate-600 text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-slate-500 focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500 outline-none transition-colors"
                 />
               </div>
 
@@ -483,7 +483,7 @@ const Invoicing = () => {
                   type="date"
                   value={formData.dueDate}
                   onChange={(e) => setFormData({ ...formData, dueDate: e.target.value })}
-                  className="w-full px-4 py-3 rounded-lg bg-gray-50 dark:bg-slate-900/50 border border-gray-300 dark:border-slate-600 text-gray-900 dark:text-white focus:border-purple-500 focus:ring-1 focus:ring-purple-500 outline-none transition-colors"
+                  className="w-full px-4 py-3 rounded-lg bg-gray-50 dark:bg-slate-900/50 border border-gray-300 dark:border-slate-600 text-gray-900 dark:text-white focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500 outline-none transition-colors"
                 />
               </div>
             </div>
@@ -493,13 +493,13 @@ const Invoicing = () => {
           <div className="p-6 rounded-xl bg-white dark:bg-slate-800/30 border border-gray-200 dark:border-slate-700/50 shadow-sm">
             <div className="flex items-center justify-between mb-6">
               <div className="flex items-center gap-2">
-                <FileText className="w-5 h-5 text-purple-600 dark:text-purple-400" />
+                <FileText className="w-5 h-5 text-emerald-600 dark:text-emerald-400" />
                 <h2 className="text-lg font-semibold text-gray-900 dark:text-white">Line Items</h2>
               </div>
               <select
                 value={formData.currency}
                 onChange={(e) => setFormData({ ...formData, currency: e.target.value })}
-                className="px-3 py-2 rounded-lg bg-gray-50 dark:bg-slate-900/50 border border-gray-300 dark:border-slate-600 text-gray-900 dark:text-white focus:border-purple-500 outline-none"
+                className="px-3 py-2 rounded-lg bg-gray-50 dark:bg-slate-900/50 border border-gray-300 dark:border-slate-600 text-gray-900 dark:text-white focus:border-emerald-500 outline-none"
               >
                 {CURRENCIES.map(curr => (
                   <option key={curr.code} value={curr.code}>
@@ -531,7 +531,7 @@ const Invoicing = () => {
                         value={item.description}
                         onChange={(e) => updateLineItem(index, 'description', e.target.value)}
                         placeholder="Service or product"
-                        className="w-full px-3 py-2 rounded-lg bg-white dark:bg-slate-800/50 border border-gray-300 dark:border-slate-600 text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-slate-500 focus:border-purple-500 outline-none"
+                        className="w-full px-3 py-2 rounded-lg bg-white dark:bg-slate-800/50 border border-gray-300 dark:border-slate-600 text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-slate-500 focus:border-emerald-500 outline-none"
                       />
                     </div>
                     <div className="col-span-2">
@@ -540,7 +540,7 @@ const Invoicing = () => {
                         value={item.quantity}
                         onChange={(e) => updateLineItem(index, 'quantity', e.target.value)}
                         min="1"
-                        className="w-full px-3 py-2 rounded-lg bg-white dark:bg-slate-800/50 border border-gray-300 dark:border-slate-600 text-gray-900 dark:text-white text-center focus:border-purple-500 outline-none"
+                        className="w-full px-3 py-2 rounded-lg bg-white dark:bg-slate-800/50 border border-gray-300 dark:border-slate-600 text-gray-900 dark:text-white text-center focus:border-emerald-500 outline-none"
                       />
                     </div>
                     <div className="col-span-3">
@@ -551,7 +551,7 @@ const Invoicing = () => {
                         placeholder="0.00"
                         min="0"
                         step="0.01"
-                        className="w-full px-3 py-2 rounded-lg bg-white dark:bg-slate-800/50 border border-gray-300 dark:border-slate-600 text-gray-900 dark:text-white text-right focus:border-purple-500 outline-none"
+                        className="w-full px-3 py-2 rounded-lg bg-white dark:bg-slate-800/50 border border-gray-300 dark:border-slate-600 text-gray-900 dark:text-white text-right focus:border-emerald-500 outline-none"
                       />
                     </div>
                     <div className="col-span-2 flex items-center justify-end gap-2">
@@ -574,7 +574,7 @@ const Invoicing = () => {
 
             <button 
               onClick={addLineItem} 
-              className="mt-4 flex items-center gap-2 px-4 py-2 text-sm text-purple-600 dark:text-purple-400 hover:text-purple-700 dark:hover:text-purple-300 hover:bg-purple-50 dark:hover:bg-purple-500/10 rounded-lg transition-colors"
+              className="mt-4 flex items-center gap-2 px-4 py-2 text-sm text-emerald-600 dark:text-emerald-400 hover:text-emerald-700 dark:hover:text-emerald-300 hover:bg-emerald-50 dark:hover:bg-emerald-500/10 rounded-lg transition-colors"
             >
               <Plus className="w-4 h-4" />
               Add Line Item
@@ -591,7 +591,7 @@ const Invoicing = () => {
               onChange={(e) => setFormData({ ...formData, notes: e.target.value })}
               placeholder="Payment is due within 30 days of invoice date..."
               rows="3"
-              className="w-full px-4 py-3 rounded-lg bg-gray-50 dark:bg-slate-900/50 border border-gray-300 dark:border-slate-600 text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-slate-500 focus:border-purple-500 focus:ring-1 focus:ring-purple-500 outline-none transition-colors resize-none"
+              className="w-full px-4 py-3 rounded-lg bg-gray-50 dark:bg-slate-900/50 border border-gray-300 dark:border-slate-600 text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-slate-500 focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500 outline-none transition-colors resize-none"
             />
           </div>
         </div>
@@ -623,7 +623,7 @@ const Invoicing = () => {
               
               <div className="flex justify-between items-center">
                 <span className="text-gray-900 dark:text-white font-semibold">Total</span>
-                <span className="text-2xl font-bold text-purple-600 dark:text-purple-400">
+                <span className="text-2xl font-bold text-emerald-600 dark:text-emerald-400">
                   {formatCurrency(total, formData.currency)}
                 </span>
               </div>
@@ -632,7 +632,7 @@ const Invoicing = () => {
             <button
               onClick={handleSubmit}
               disabled={loading || !formData.clientName.trim()}
-              className="w-full mt-6 flex items-center justify-center gap-2 px-6 py-3 bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-500 hover:to-indigo-500 text-white font-semibold rounded-xl transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+              className="w-full mt-6 flex items-center justify-center gap-2 px-6 py-3 bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white font-semibold rounded-xl transition-all disabled:opacity-50 disabled:cursor-not-allowed"
             >
               {loading ? (
                 <div className="animate-spin w-5 h-5 border-2 border-white border-t-transparent rounded-full" />

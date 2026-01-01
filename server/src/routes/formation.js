@@ -215,17 +215,36 @@ router.post("/", authenticateToken, async (req, res) => {
       industryCode,
       sicCode,
       customSicCode,
-      directorName,
+      // New split name fields
+      directorFirstName,
+      directorLastName,
       directorDob,
       nationality,
       occupation,
-      directorAddress,
+      // New structured address fields
+      addressStreet,
+      addressCity,
+      addressPostcode,
+      addressCountry,
       directorEmail,
       directorPhone,
       townOfBirth,
       mothersMaidenName,
       fathersFirstName,
     } = req.body;
+
+    // Combine name and address for storage
+    const directorName =
+      directorFirstName && directorLastName
+        ? `${directorFirstName} ${directorLastName}`
+        : null;
+    const directorAddress = addressStreet
+      ? `${addressStreet}, ${addressCity || ""}, ${addressPostcode || ""}, ${
+          addressCountry || "Kenya"
+        }`
+          .replace(/,\s*,/g, ",")
+          .replace(/,\s*$/, "")
+      : null;
 
     // Validation
     if (!companyName || !jurisdiction || !companyType) {
@@ -268,9 +287,15 @@ router.post("/", authenticateToken, async (req, res) => {
         directorEmail: directorEmail || null,
         directorPhone: directorPhone || null,
         directorData: {
+          directorFirstName,
+          directorLastName,
           directorDob,
           nationality,
           occupation,
+          addressStreet,
+          addressCity,
+          addressPostcode,
+          addressCountry,
           townOfBirth,
           mothersMaidenName,
           fathersFirstName,
